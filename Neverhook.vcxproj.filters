@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Исходные файлы">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Файлы заголовков">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Файлы ресурсов">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Исходные файлы\deps">
+      <UniqueIdentifier>{991ae6fc-c4f8-43a2-9cfb-f588e1579ebd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\deps\imgui">
+      <UniqueIdentifier>{52f907a5-1be2-4327-90d4-e8f6e4901a0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\deps\minhook">
+      <UniqueIdentifier>{7ad97415-7f78-4f36-a759-0819a3dfd963}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\src">
+      <UniqueIdentifier>{f274960e-8c5e-49ff-9593-d861b3f374d7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="framework.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="vars.h">
+      <Filter>Исходные файлы\src</Filter>
+    </ClInclude>
+    <ClInclude Include="gui.h">
+      <Filter>Исходные файлы\src</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks.h">
+      <Filter>Исходные файлы\src</Filter>
+    </ClInclude>
+    <ClInclude Include="deps\minhook\include\MinHook.h">
+      <Filter>Исходные файлы\deps\minhook</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="gui.cpp">
+      <Filter>Исходные файлы\src</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks.cpp">
+      <Filter>Исходные файлы\src</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\imgui\imgui_draw.cpp">
+      <Filter>Исходные файлы\deps\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\imgui\imgui.cpp">
+      <Filter>Исходные файлы\deps\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\imgui\imgui_demo.cpp">
+      <Filter>Исходные файлы\deps\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\imgui\imgui_impl_opengl3.cpp">
+      <Filter>Исходные файлы\deps\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\imgui\imgui_impl_win32.cpp">
+      <Filter>Исходные файлы\deps\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\imgui\imgui_tables.cpp">
+      <Filter>Исходные файлы\deps\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\imgui\imgui_widgets.cpp">
+      <Filter>Исходные файлы\deps\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="vars.cpp">
+      <Filter>Исходные файлы\src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="deps\minhook\lib\libMinHook.x64.lib">
+      <Filter>Исходные файлы\deps\minhook</Filter>
+    </Library>
+    <Library Include="deps\minhook\lib\libMinHook.x86.lib">
+      <Filter>Исходные файлы\deps\minhook</Filter>
+    </Library>
+  </ItemGroup>
+</Project>
