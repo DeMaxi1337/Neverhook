@@ -26,19 +26,16 @@ Advanced mod menu for Geometry Dash with QoF features
 
 </div>
 
-· Player — noclip, show hitboxes
+## Features
 
-· Macros — replay bot, macro editor (in progress)
+- **Player:** noclip, show hitboxes
+- **Macros:** replay bot, macro editor *(in progress)*
+- **Global:** FPS unlock, TPS bypass, speedhack
+- **Cosmetic:** custom wave trail, RGB icons, hide UI *(in progress)*
+- **Bypass:** unlock all icons, shops, vault codes *(in progress)*
+- **Creator:** no object limit, better level info, free scroll *(in progress)*
+- **Scripts:** Lua scripts support *(in progress)*
 
-· Global — FPS unlock, TPS bypass, speedhack
+## Download
 
-· Cosmetic — custom wave trail, RGB icons, hide UI (in progress)
-
-· Bypass — unlock all icons, shops, vault codes (in progress)
-
-· Creator — no object limit, better level info, free scroll (in progress)
-
-· Scripts — Lua scripts support (in progress)
-
-Download
-Releases coming soon
+Releases coming soon.
