@@ -6,6 +6,23 @@
 
 Advanced mod menu for Geometry Dash with QoF features
 
+· Player — noclip, show hitboxes
+
+· Macros — replay bot, macro editor (in progress)
+
+· Global — FPS unlock, TPS bypass, speedhack
+
+· Cosmetic — custom wave trail, RGB icons, hide UI (in progress)
+
+· Bypass — unlock all icons, shops, vault codes (in progress)
+
+· Creator — no object limit, better level info, free scroll (in progress)
+
+· Scripts — Lua scripts support (in progress)
+
+Download
+Releases coming soon
+
 <p>
   <a href="https://github.com/DeMaxi1337/Neverhook/releases">
     <img src="https://img.shields.io/github/v/release/DeMaxi1337/Neverhook?label=Release&color=blue&style=flat-square" />
