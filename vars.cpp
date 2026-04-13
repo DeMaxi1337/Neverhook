@@ -3,4 +3,8 @@
 namespace Vars {
     bool menuOpen = false;
     bool noclip = false;
+    bool noDeathEffect = false;
+    bool practiceMusic = false;
+    bool speedhack = false;
+    float speedhackValue = 1.0f;
 }
