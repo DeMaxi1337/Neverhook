@@ -39,3 +39,8 @@ Advanced mod menu for Geometry Dash with QoF features
 ## Download
 
 Releases coming soon.
+
+## The project is under development!
+
+Our mod menu is currently in its infancy; we're working hard to maintain it and add features. We're aware of many issues with the mod menu.
+Expect occasional crashes, UI glitches, or incomplete features. If something breaks, open an issue with details and we’ll take a look. Stable releases will arrive as the project matures.
