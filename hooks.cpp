@@ -23,9 +23,9 @@ namespace Offsets {
     // GeometryDash.exe
     constexpr uintptr_t destroyPlayer = 0x3B39D0;
     constexpr uintptr_t playDeathEffect = 0x37ef10;
-    constexpr uintptr_t togglePracticeMode = 0x3b9e50;
     constexpr uintptr_t isIconUnlocked = 0x17c500;
     constexpr uintptr_t isColorUnlocked = 0x17c8e0;
+    constexpr uintptr_t isItemUnlocked = 0x1e5820;
 
     // libcocos2d.dll
     constexpr uintptr_t schedulerUpdate = 0xC2B60;
@@ -56,10 +56,7 @@ typedef void(__fastcall* tDestroyPlayer)(void* self, void* player);
 tDestroyPlayer oDestroyPlayer = nullptr;
 
 void __fastcall hkDestroyPlayer(void* self, void* player) {
-    if (Vars::noclip) {
-        // printf("[Noclip] Blocked death\n"); // я так подумал и решил вырезать его ваще, он каждый кадр пишет весь этот мусор
-        return;
-    }
+    if (Vars::noclip) return;
     oDestroyPlayer(self, player);
 }
 
@@ -69,13 +66,6 @@ tPlayDeathEffect oPlayDeathEffect = nullptr;
 void __fastcall hkPlayDeathEffect(void* self) {
     if (Vars::noDeathEffect) return;
     oPlayDeathEffect(self);
-}
-
-typedef void(__fastcall* tTogglePracticeMode)(void* self, bool practiceMode);
-tTogglePracticeMode oTogglePracticeMode = nullptr;
-
-void __fastcall hkTogglePracticeMode(void* self, bool practiceMode) {
-    oTogglePracticeMode(self, practiceMode);
 }
 
 typedef void(__fastcall* tSchedulerUpdate)(void* self, float dt);
@@ -104,6 +94,15 @@ bool __fastcall hkIsColorUnlocked(void* self, int id, int type) {
     return oIsColorUnlocked(self, id, type);
 }
 
+typedef bool(__fastcall* tIsItemUnlocked)(void* self, int type, int id);
+tIsItemUnlocked oIsItemUnlocked = nullptr;
+
+bool __fastcall hkIsItemUnlocked(void* self, int type, int id) {
+    if (Vars::practiceMusic && type == 12 && id == 17)
+        return true;
+    return oIsItemUnlocked(self, type, id);
+}
+
 void InitHooks() {
     InitDebugConsole();
 
@@ -126,9 +125,9 @@ void InitHooks() {
 
     SafeHook(gdBase + Offsets::destroyPlayer, &hkDestroyPlayer, (LPVOID*)&oDestroyPlayer, "destroyPlayer");
     SafeHook(gdBase + Offsets::playDeathEffect, &hkPlayDeathEffect, (LPVOID*)&oPlayDeathEffect, "playDeathEffect");
-    SafeHook(gdBase + Offsets::togglePracticeMode, &hkTogglePracticeMode, (LPVOID*)&oTogglePracticeMode, "togglePracticeMode");
     SafeHook(gdBase + Offsets::isIconUnlocked, &hkIsIconUnlocked, (LPVOID*)&oIsIconUnlocked, "isIconUnlocked");
     SafeHook(gdBase + Offsets::isColorUnlocked, &hkIsColorUnlocked, (LPVOID*)&oIsColorUnlocked, "isColorUnlocked");
+    SafeHook(gdBase + Offsets::isItemUnlocked, &hkIsItemUnlocked, (LPVOID*)&oIsItemUnlocked, "isItemUnlocked");
 
     SafeHook(cocosBase + Offsets::schedulerUpdate, &hkSchedulerUpdate, (LPVOID*)&oSchedulerUpdate, "schedulerUpdate");
 
