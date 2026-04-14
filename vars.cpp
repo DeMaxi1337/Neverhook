@@ -2,11 +2,13 @@
 
 namespace Vars {
     bool menuOpen = false;
+
     bool noclip = false;
     bool noDeathEffect = false;
+
     bool practiceMusic = false;
+    bool iconBypass = false;
+
     bool speedhack = false;
     float speedhackValue = 1.0f;
-    bool accuratePercentage = false;
-    int percentageDecimals = 2;
 }

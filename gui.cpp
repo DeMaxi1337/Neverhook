@@ -5,7 +5,7 @@
 void DrawNeverhookMenu() {
     ImGui::SetNextWindowSize({ 450, 300 }, ImGuiCond_FirstUseEver);
     if (ImGui::Begin("Neverhook", nullptr, ImGuiWindowFlags_NoCollapse)) {
-        ImGui::Text("Build: v1.0.1-development");
+        ImGui::Text("Build: v1.0.2-development");
         ImGui::Separator();
 
         if (ImGui::BeginChild("Hacks", ImVec2(0, 0), true)) {
@@ -17,6 +17,7 @@ void DrawNeverhookMenu() {
 
             if (ImGui::CollapsingHeader("Bypass")) {
                 ImGui::Checkbox("Practice Music", &Vars::practiceMusic);
+                ImGui::Checkbox("Icon Bypass", &Vars::iconBypass);
             }
 
             if (ImGui::CollapsingHeader("Global")) {
