@@ -7,4 +7,6 @@ namespace Vars {
     extern bool practiceMusic;
     extern bool speedhack;
     extern float speedhackValue;
+    extern bool accuratePercentage;
+    extern int percentageDecimals;
 }

@@ -7,4 +7,6 @@ namespace Vars {
     bool practiceMusic = false;
     bool speedhack = false;
     float speedhackValue = 1.0f;
+    bool accuratePercentage = false;
+    int percentageDecimals = 2;
 }

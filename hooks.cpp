@@ -53,7 +53,7 @@ tDestroyPlayer oDestroyPlayer = nullptr;
 
 void __fastcall hkDestroyPlayer(void* self, void* player) {
     if (Vars::noclip) {
-        printf("[Neverhook] Noclip blocked death\n"); // вот тут он срёт вечно при ноуклипе включенном. пофикшу потом как отойду от запоя
+        // printf("[Neverhook] Noclip blocked death\n"); // короче я просто вырежу его и все я так подумал
         return;
     }
     oDestroyPlayer(self, player);
