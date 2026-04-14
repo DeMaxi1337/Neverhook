@@ -3,6 +3,8 @@
 #include <MinHook.h>
 #include <windows.h>
 #include <cstdio>
+#include <psapi.h>
+#pragma comment(lib, "psapi.lib")
 
 uintptr_t gdBase = 0;
 uintptr_t cocosBase = 0;
@@ -22,6 +24,8 @@ namespace Offsets {
     constexpr uintptr_t destroyPlayer = 0x3B39D0;
     constexpr uintptr_t playDeathEffect = 0x37ef10;
     constexpr uintptr_t togglePracticeMode = 0x3b9e50;
+    constexpr uintptr_t isIconUnlocked = 0x17c500;
+    constexpr uintptr_t isColorUnlocked = 0x17c8e0;
 
     // libcocos2d.dll
     constexpr uintptr_t schedulerUpdate = 0xC2B60;
@@ -29,22 +33,22 @@ namespace Offsets {
 
 static bool SafeHook(uintptr_t addr, LPVOID hook, LPVOID* original, const char* name) {
     if (addr == 0) {
-        printf("[Neverhook] Hook skipped: %s (offset not set)\n", name);
+        printf("[!] Hook skipped: %s (offset not set)\n", name);
         return false;
     }
     if (IsBadReadPtr((LPVOID)addr, 1)) {
-        printf("[Neverhook] Hook failed: %s (bad address: %llX)\n", name, addr);
+        printf("[!] Hook failed: %s (bad address: %llX)\n", name, addr);
         return false;
     }
     if (MH_CreateHook((LPVOID)addr, hook, original) != MH_OK) {
-        printf("[Neverhook] Hook failed: %s (MH_CreateHook failed)\n", name);
+        printf("[!] Hook failed: %s (MH_CreateHook failed)\n", name);
         return false;
     }
     if (MH_EnableHook((LPVOID)addr) != MH_OK) {
-        printf("[Neverhook] Hook failed: %s (MH_EnableHook failed)\n", name);
+        printf("[!] Hook failed: %s (MH_EnableHook failed)\n", name);
         return false;
     }
-    printf("[Neverhook] Hook success: %s at %llX\n", name, addr);
+    printf("[+] Hook success: %s at %llX\n", name, addr);
     return true;
 }
 
@@ -53,7 +57,7 @@ tDestroyPlayer oDestroyPlayer = nullptr;
 
 void __fastcall hkDestroyPlayer(void* self, void* player) {
     if (Vars::noclip) {
-        // printf("[Neverhook] Noclip blocked death\n"); // короче я просто вырежу его и все я так подумал
+        // printf("[Noclip] Blocked death\n"); // я так подумал и решил вырезать его ваще, он каждый кадр пишет весь этот мусор
         return;
     }
     oDestroyPlayer(self, player);
@@ -63,10 +67,7 @@ typedef void(__fastcall* tPlayDeathEffect)(void* self);
 tPlayDeathEffect oPlayDeathEffect = nullptr;
 
 void __fastcall hkPlayDeathEffect(void* self) {
-    if (Vars::noDeathEffect) {
-        printf("[Neverhook] - No Death Effect - blocked effect\n");
-        return;
-    }
+    if (Vars::noDeathEffect) return;
     oPlayDeathEffect(self);
 }
 
@@ -74,9 +75,6 @@ typedef void(__fastcall* tTogglePracticeMode)(void* self, bool practiceMode);
 tTogglePracticeMode oTogglePracticeMode = nullptr;
 
 void __fastcall hkTogglePracticeMode(void* self, bool practiceMode) {
-    if (Vars::practiceMusic) {
-        printf("[Neverhook] Practice Music - Practice mode toggled\n"); // Вот тут я ваще не ебу почему не работает, мб надо через фмод делать
-    }
     oTogglePracticeMode(self, practiceMode);
 }
 
@@ -90,31 +88,49 @@ void __fastcall hkSchedulerUpdate(void* self, float dt) {
     oSchedulerUpdate(self, dt);
 }
 
+typedef bool(__fastcall* tIsIconUnlocked)(void* self, int id, int type);
+tIsIconUnlocked oIsIconUnlocked = nullptr;
+
+bool __fastcall hkIsIconUnlocked(void* self, int id, int type) {
+    if (Vars::iconBypass) return true;
+    return oIsIconUnlocked(self, id, type);
+}
+
+typedef bool(__fastcall* tIsColorUnlocked)(void* self, int id, int type);
+tIsColorUnlocked oIsColorUnlocked = nullptr;
+
+bool __fastcall hkIsColorUnlocked(void* self, int id, int type) {
+    if (Vars::iconBypass) return true;
+    return oIsColorUnlocked(self, id, type);
+}
+
 void InitHooks() {
     InitDebugConsole();
 
     gdBase = (uintptr_t)GetModuleHandleA("GeometryDash.exe");
     cocosBase = (uintptr_t)GetModuleHandleA("libcocos2d.dll");
 
-    printf("[Neverhook] GD Base: %llX\n", gdBase);
-    printf("[Neverhook] Cocos Base: %llX\n", cocosBase);
+    printf("[*] GD Base: %llX\n", gdBase);
+    printf("[*] Cocos Base: %llX\n", cocosBase);
 
     if (!gdBase || !cocosBase) {
-        printf("[Neverhook] Failed to get module handles\n");
+        printf("[!] Failed to get module handles\n");
         return;
     }
 
     if (MH_Initialize() != MH_OK) {
-        printf("[Neverhook] MinHook initialization failed\n");
+        printf("[!] MinHook initialization failed\n");
         return;
     }
-    printf("[Neverhook] MinHook initialized\n");
+    printf("[+] MinHook initialized\n");
 
     SafeHook(gdBase + Offsets::destroyPlayer, &hkDestroyPlayer, (LPVOID*)&oDestroyPlayer, "destroyPlayer");
     SafeHook(gdBase + Offsets::playDeathEffect, &hkPlayDeathEffect, (LPVOID*)&oPlayDeathEffect, "playDeathEffect");
     SafeHook(gdBase + Offsets::togglePracticeMode, &hkTogglePracticeMode, (LPVOID*)&oTogglePracticeMode, "togglePracticeMode");
+    SafeHook(gdBase + Offsets::isIconUnlocked, &hkIsIconUnlocked, (LPVOID*)&oIsIconUnlocked, "isIconUnlocked");
+    SafeHook(gdBase + Offsets::isColorUnlocked, &hkIsColorUnlocked, (LPVOID*)&oIsColorUnlocked, "isColorUnlocked");
 
     SafeHook(cocosBase + Offsets::schedulerUpdate, &hkSchedulerUpdate, (LPVOID*)&oSchedulerUpdate, "schedulerUpdate");
 
-    printf("[Neverhook] All hooks initialized\n");
+    printf("[*] All hooks initialized\n");
 }
