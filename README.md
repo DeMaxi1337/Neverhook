@@ -4,7 +4,7 @@
 
 # Neverhook
 
-Advanced mod menu for Geometry Dash with QoF features
+Internal DLL mod menu for Geometry Dash with QoF features
 
 <p>
   <a href="https://github.com/DeMaxi1337/Neverhook/releases">
