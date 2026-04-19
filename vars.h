@@ -11,4 +11,7 @@ namespace Vars {
 
     extern bool speedhack;
     extern float speedhackValue;
+
+    extern bool fpsUnlock;
+    extern float fpsValue;
 }

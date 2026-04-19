@@ -11,4 +11,7 @@ namespace Vars {
 
     bool speedhack = false;
     float speedhackValue = 1.0f;
+
+    bool fpsUnlock = false;
+    float fpsValue = 60.0f;
 }
