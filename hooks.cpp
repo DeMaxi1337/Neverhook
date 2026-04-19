@@ -29,6 +29,7 @@ namespace Offsets {
 
     // libcocos2d.dll
     constexpr uintptr_t schedulerUpdate = 0xC2B60;
+    constexpr uintptr_t setAnimationInterval = 0xBF3F0;
 }
 
 static bool SafeHook(uintptr_t addr, LPVOID hook, LPVOID* original, const char* name) {
@@ -103,6 +104,32 @@ bool __fastcall hkIsItemUnlocked(void* self, int type, int id) {
     return oIsItemUnlocked(self, type, id);
 }
 
+// FPS Bypass
+typedef void* (__cdecl* tSharedDirector)();
+typedef void(__thiscall* tSetAnimationInterval)(void* self, double interval);
+
+tSharedDirector pSharedDirector = nullptr;
+tSetAnimationInterval pSetAnimationInterval = nullptr;
+
+void ApplyFPS() {
+    if (!pSharedDirector || !pSetAnimationInterval) {
+        printf("[!] ApplyFPS: pointers not initialized\n");
+        return;
+    }
+
+    void* director = pSharedDirector();
+    if (!director) {
+        printf("[!] ApplyFPS: director is null\n");
+        return;
+    }
+
+    double interval = Vars::fpsUnlock
+        ? (1.0 / (double)Vars::fpsValue)
+        : (1.0 / 60.0);
+
+    pSetAnimationInterval(director, interval); // ЭЭЭЭЙ А НУ КА СТОЙ ШАЛАВА
+}
+
 void InitHooks() {
     InitDebugConsole();
 
@@ -122,6 +149,20 @@ void InitHooks() {
         return;
     }
     printf("[+] MinHook initialized\n");
+
+    pSharedDirector = (tSharedDirector)GetProcAddress(
+        (HMODULE)cocosBase,
+        "?sharedDirector@CCDirector@cocos2d@@SAPEAV12@XZ"
+    );
+
+    pSetAnimationInterval = (tSetAnimationInterval)(cocosBase + Offsets::setAnimationInterval);
+
+    if (pSharedDirector) {
+        printf("[+] CCDirector::sharedDirector resolved\n");
+    }
+    else {
+        printf("[!] CCDirector::sharedDirector not found\n");
+    }
 
     SafeHook(gdBase + Offsets::destroyPlayer, &hkDestroyPlayer, (LPVOID*)&oDestroyPlayer, "destroyPlayer");
     SafeHook(gdBase + Offsets::playDeathEffect, &hkPlayDeathEffect, (LPVOID*)&oPlayDeathEffect, "playDeathEffect");
