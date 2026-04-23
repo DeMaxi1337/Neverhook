@@ -6,7 +6,7 @@
 void DrawNeverhookMenu() {
     ImGui::SetNextWindowSize({ 450, 300 }, ImGuiCond_FirstUseEver);
     if (ImGui::Begin("Neverhook", nullptr, ImGuiWindowFlags_NoCollapse)) {
-        ImGui::Text("Build: v1.0.4-development");
+        ImGui::Text("Build: v1.0.5-development");
         ImGui::Separator();
 
         if (ImGui::BeginChild("Hacks", ImVec2(0, 0), true)) {
@@ -14,6 +14,7 @@ void DrawNeverhookMenu() {
             if (ImGui::CollapsingHeader("Player", ImGuiTreeNodeFlags_DefaultOpen)) {
                 ImGui::Checkbox("Noclip", &Vars::noclip);
                 ImGui::Checkbox("No Death Effect", &Vars::noDeathEffect);
+                ImGui::Checkbox("No Respawn Flash", &Vars::noRespawnFlash);
             }
 
             if (ImGui::CollapsingHeader("Bypass")) {

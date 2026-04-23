@@ -26,6 +26,7 @@ namespace Offsets {
     constexpr uintptr_t isIconUnlocked = 0x17c500;
     constexpr uintptr_t isColorUnlocked = 0x17c8e0;
     constexpr uintptr_t isItemUnlocked = 0x1e5820;
+    constexpr uintptr_t playSpawnEffect = 0x397480;
 
     // libcocos2d.dll
     constexpr uintptr_t schedulerUpdate = 0xC2B60;
@@ -104,7 +105,6 @@ bool __fastcall hkIsItemUnlocked(void* self, int type, int id) {
     return oIsItemUnlocked(self, type, id);
 }
 
-// FPS Bypass
 typedef void* (__cdecl* tSharedDirector)();
 typedef void(__thiscall* tSetAnimationInterval)(void* self, double interval);
 
@@ -128,6 +128,14 @@ void ApplyFPS() {
         : (1.0 / 60.0);
 
     pSetAnimationInterval(director, interval); // ЭЭЭЭЙ А НУ КА СТОЙ ШАЛАВА
+}
+
+typedef void(__thiscall* tPlaySpawnEffect)(void* self);
+tPlaySpawnEffect oPlaySpawnEffect = nullptr;
+
+void __fastcall hkPlaySpawnEffect(void* self) {
+    if (Vars::noRespawnFlash) return;
+    oPlaySpawnEffect(self);
 }
 
 void InitHooks() {
@@ -169,6 +177,7 @@ void InitHooks() {
     SafeHook(gdBase + Offsets::isIconUnlocked, &hkIsIconUnlocked, (LPVOID*)&oIsIconUnlocked, "isIconUnlocked");
     SafeHook(gdBase + Offsets::isColorUnlocked, &hkIsColorUnlocked, (LPVOID*)&oIsColorUnlocked, "isColorUnlocked");
     SafeHook(gdBase + Offsets::isItemUnlocked, &hkIsItemUnlocked, (LPVOID*)&oIsItemUnlocked, "isItemUnlocked");
+    SafeHook(gdBase + Offsets::playSpawnEffect, &hkPlaySpawnEffect, (LPVOID*)&oPlaySpawnEffect, "playSpawnEffect");
 
     SafeHook(cocosBase + Offsets::schedulerUpdate, &hkSchedulerUpdate, (LPVOID*)&oSchedulerUpdate, "schedulerUpdate");
 
