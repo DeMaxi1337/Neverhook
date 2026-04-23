@@ -5,6 +5,7 @@ namespace Vars {
 
     extern bool noclip;
     extern bool noDeathEffect;
+    extern bool noRespawnFlash;
 
     extern bool practiceMusic;
     extern bool iconBypass;

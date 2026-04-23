@@ -5,6 +5,7 @@ namespace Vars {
 
     bool noclip = false;
     bool noDeathEffect = false;
+    bool noRespawnFlash = false;
 
     bool practiceMusic = false;
     bool iconBypass = false;
