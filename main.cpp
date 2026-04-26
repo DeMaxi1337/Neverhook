@@ -17,23 +17,25 @@
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 WNDPROC oWndProc = nullptr;
+
 typedef BOOL(WINAPI* twglSwapBuffers)(HDC hdc);
 twglSwapBuffers owglSwapBuffers = nullptr;
 
 LRESULT CALLBACK hkWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    if (msg == WM_KEYDOWN && wParam == VK_INSERT) {
+    if (msg == WM_KEYUP && wParam == VK_INSERT) {
         Vars::menuOpen = !Vars::menuOpen;
-        if (!Vars::menuOpen) {
-            ImGui::GetIO().MouseDrawCursor = false;
-        }
+        ImGui::GetIO().MouseDrawCursor = Vars::menuOpen;
         return 0;
     }
 
     if (Vars::menuOpen) {
         ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
 
-        if (msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST) return true;
-        if (msg == WM_KEYDOWN || msg == WM_CHAR) return true;
+        if (msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST)
+            return 1;
+
+        if (msg == WM_KEYDOWN || msg == WM_KEYUP || msg == WM_CHAR)
+            return 1;
     }
 
     return CallWindowProc(oWndProc, hWnd, msg, wParam, lParam);
@@ -41,47 +43,60 @@ LRESULT CALLBACK hkWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 BOOL WINAPI hkwglSwapBuffers(HDC hdc) {
     static bool init = false;
+
     if (!init) {
         HWND window = WindowFromDC(hdc);
-        oWndProc = (WNDPROC)SetWindowLongPtr(window, GWLP_WNDPROC, (LONG_PTR)hkWndProc);
-        ImGui::CreateContext();
-        ImGui_ImplWin32_Init(window);
-        ImGui_ImplOpenGL3_Init();
-        init = true;
+        if (window) {
+            oWndProc = (WNDPROC)SetWindowLongPtr(window, GWLP_WNDPROC, (LONG_PTR)hkWndProc);
+
+            ImGui::CreateContext();
+            ImGui_ImplWin32_Init(window);
+            ImGui_ImplOpenGL3_Init();
+
+            init = true;
+        }
     }
 
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplWin32_NewFrame();
-    ImGui::NewFrame();
+    if (init) {
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplWin32_NewFrame();
+        ImGui::NewFrame();
 
-    if (Vars::menuOpen) {
-        DrawNeverhookMenu();
+        if (Vars::menuOpen) {
+            DrawNeverhookMenu();
+        }
+
+        ImGui::Render();
+
+        if (ImGui::GetDrawData())
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
 
-    ImGui::Render();
-    if (ImGui::GetDrawData()) {
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    }
-
-    return owglSwapBuffers(hdc);
+    return owglSwapBuffers ? owglSwapBuffers(hdc) : FALSE;
 }
 
 void MainThread(HMODULE hModule) {
-    AllocConsole();
-    freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
-
     Sleep(1000);
 
     InitHooks();
 
-    void* swapAddr = GetProcAddress(GetModuleHandleA("opengl32.dll"), "wglSwapBuffers");
-    if (swapAddr) {
-        MH_CreateHook(swapAddr, &hkwglSwapBuffers, (LPVOID*)&owglSwapBuffers);
+    HMODULE hOpenGL = GetModuleHandleA("opengl32.dll");
+    if (!hOpenGL)
+        return;
+
+    void* swapAddr = GetProcAddress(hOpenGL, "wglSwapBuffers");
+    if (!swapAddr)
+        return;
+
+    if (MH_CreateHook(swapAddr, &hkwglSwapBuffers, (LPVOID*)&owglSwapBuffers) == MH_OK) {
         MH_EnableHook(swapAddr);
     }
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID reserved) {
-    if (reason == DLL_PROCESS_ATTACH) std::thread(MainThread, hModule).detach();
+    if (reason == DLL_PROCESS_ATTACH) {
+        DisableThreadLibraryCalls(hModule);
+        std::thread(MainThread, hModule).detach();
+    }
     return TRUE;
 }
