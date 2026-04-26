@@ -1,4 +1,4 @@
-#include <windows.h>
+﻿#include <windows.h>
 #include <thread>
 #include <GL/gl.h>
 #include <cstdio>
@@ -21,7 +21,8 @@ WNDPROC oWndProc = nullptr;
 typedef BOOL(WINAPI* twglSwapBuffers)(HDC hdc);
 twglSwapBuffers owglSwapBuffers = nullptr;
 
-LRESULT CALLBACK hkWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK hkWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
     if (msg == WM_KEYUP && wParam == VK_INSERT) {
         Vars::menuOpen = !Vars::menuOpen;
         ImGui::GetIO().MouseDrawCursor = Vars::menuOpen;
@@ -41,7 +42,8 @@ LRESULT CALLBACK hkWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return CallWindowProc(oWndProc, hWnd, msg, wParam, lParam);
 }
 
-BOOL WINAPI hkwglSwapBuffers(HDC hdc) {
+BOOL WINAPI hkwglSwapBuffers(HDC hdc)
+{
     static bool init = false;
 
     if (!init) {
@@ -51,31 +53,35 @@ BOOL WINAPI hkwglSwapBuffers(HDC hdc) {
 
             ImGui::CreateContext();
             ImGui_ImplWin32_Init(window);
-            ImGui_ImplOpenGL3_Init();
+            ImGui_ImplOpenGL3_Init("#version 130");
 
             init = true;
         }
     }
 
-    if (init) {
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplWin32_NewFrame();
-        ImGui::NewFrame();
+    if (!Vars::menuOpen)
+        return owglSwapBuffers ? owglSwapBuffers(hdc) : FALSE;
 
-        if (Vars::menuOpen) {
-            DrawNeverhookMenu();
-        }
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
 
-        ImGui::Render();
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplWin32_NewFrame();
+    ImGui::NewFrame();
 
-        if (ImGui::GetDrawData())
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    }
+    DrawNeverhookMenu();
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    glPopClientAttrib();
+    glPopAttrib();
 
     return owglSwapBuffers ? owglSwapBuffers(hdc) : FALSE;
 }
 
-void MainThread(HMODULE hModule) {
+void MainThread(HMODULE hModule)
+{
     Sleep(1000);
 
     InitHooks();
@@ -88,12 +94,12 @@ void MainThread(HMODULE hModule) {
     if (!swapAddr)
         return;
 
-    if (MH_CreateHook(swapAddr, &hkwglSwapBuffers, (LPVOID*)&owglSwapBuffers) == MH_OK) {
+    if (MH_CreateHook(swapAddr, &hkwglSwapBuffers, (LPVOID*)&owglSwapBuffers) == MH_OK)
         MH_EnableHook(swapAddr);
-    }
 }
 
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID reserved) {
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID reserved)
+{
     if (reason == DLL_PROCESS_ATTACH) {
         DisableThreadLibraryCalls(hModule);
         std::thread(MainThread, hModule).detach();
