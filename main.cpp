@@ -12,7 +12,7 @@
 #include "hooks.h"
 
 #pragma comment(lib, "opengl32.lib")
-#pragma comment(lib, "D:\\Neverhook\\deps\\minhook\\lib\\libMinHook.x64.lib")
+#pragma comment(lib, "deps\\minhook\\lib\\libMinHook.x64.lib")
 
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -82,7 +82,7 @@ BOOL WINAPI hkwglSwapBuffers(HDC hdc)
 
 void MainThread(HMODULE hModule)
 {
-    Sleep(1000);
+    while (!GetModuleHandleA("libcocos2d.dll")) Sleep(100);
 
     InitHooks();
 
@@ -103,6 +103,20 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID reserved)
     if (reason == DLL_PROCESS_ATTACH) {
         DisableThreadLibraryCalls(hModule);
         std::thread(MainThread, hModule).detach();
+    }
+    else if (reason == DLL_PROCESS_DETACH) {
+        MH_DisableHook(MH_ALL_HOOKS);
+        MH_Uninitialize();
+
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplWin32_Shutdown();
+        ImGui::DestroyContext();
+
+        if (oWndProc) {
+            HWND window = FindWindowA(nullptr, "Geometry Dash");
+            if (window)
+                SetWindowLongPtr(window, GWLP_WNDPROC, (LONG_PTR)oWndProc);
+        }
     }
     return TRUE;
 }
