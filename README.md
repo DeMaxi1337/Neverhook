@@ -46,7 +46,3 @@ Alpha versions are available in source code as Visual Studio project and DLL fil
 
 Our mod menu is currently in its infancy; we're working hard to maintain it and add features. We're aware of many issues with the mod menu.
 Expect occasional crashes, UI glitches, or incomplete features. If something breaks, open an issue with details and we’ll take a look. Stable releases will arrive as the project matures.
-
-## About GUI
-
-At the moment, the GUI design is a stock version of the ImGui menu - in the future it will be completely redesigned.
