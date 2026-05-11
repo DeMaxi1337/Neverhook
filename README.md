@@ -24,6 +24,10 @@ Internal DLL mod menu for Geometry Dash with QoF features
   </a>
 </p>
 
+<p align="center">
+  <img src="https://github.com/DeMaxi1337/Neverhook/blob/main/preview.png?raw=true" width="600" />
+</p>
+
 </div>
 
 ## Features
