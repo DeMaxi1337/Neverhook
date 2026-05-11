@@ -50,3 +50,9 @@ Alpha versions are available in source code as Visual Studio project and DLL fil
 
 Our mod menu is currently in its infancy; we're working hard to maintain it and add features. We're aware of many issues with the mod menu.
 Expect occasional crashes, UI glitches, or incomplete features. If something breaks, open an issue with details and we’ll take a look. Stable releases will arrive as the project matures.
+
+## Credits
+
+**DeMaxi1337** [![Telegram](https://img.shields.io/badge/@demaxi1338-2CA5E0?logo=telegram&logoColor=white)](https://t.me/demaxi1338) — main coder
+
+**spencer** [![Telegram](https://img.shields.io/badge/@burj7halifa-2CA5E0?logo=telegram&logoColor=white)](https://t.me/burj7halifa) — original GUI design (not a project contributor)
