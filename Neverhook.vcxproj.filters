@@ -42,6 +42,21 @@
     <ClInclude Include="hooks.h">
       <Filter>Исходные файлы\src</Filter>
     </ClInclude>
+    <ClInclude Include="framework_gui.h">
+      <Filter>Исходные файлы\src</Filter>
+    </ClInclude>
+    <ClInclude Include="framework_widgets.h">
+      <Filter>Исходные файлы\src</Filter>
+    </ClInclude>
+    <ClInclude Include="bytes.hpp">
+      <Filter>Исходные файлы\src</Filter>
+    </ClInclude>
+    <ClInclude Include="color_t.hpp">
+      <Filter>Исходные файлы\src</Filter>
+    </ClInclude>
+    <ClInclude Include="hashes.hpp">
+      <Filter>Исходные файлы\src</Filter>
+    </ClInclude>
     <ClInclude Include="deps\minhook\include\MinHook.h">
       <Filter>Исходные файлы\deps\minhook</Filter>
     </ClInclude>
@@ -51,6 +66,12 @@
       <Filter>Исходные файлы\src</Filter>
     </ClCompile>
     <ClCompile Include="hooks.cpp">
+      <Filter>Исходные файлы\src</Filter>
+    </ClCompile>
+    <ClCompile Include="framework_gui.cpp">
+      <Filter>Исходные файлы\src</Filter>
+    </ClCompile>
+    <ClCompile Include="framework_widgets.cpp">
       <Filter>Исходные файлы\src</Filter>
     </ClCompile>
     <ClCompile Include="deps\imgui\imgui_draw.cpp">
