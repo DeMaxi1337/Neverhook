@@ -22,6 +22,9 @@ Internal DLL mod menu for Geometry Dash with QoF features
   <a href="https://t.me/demaxi1338/">
     <img src="https://img.shields.io/badge/Telegram-t.me%2Fdemaxi1338-2CA5E0?logo=telegram&logoColor=white&style=flat-square" />
   </a>
+  <a href="https://github.com/DeMaxi1337/Neverhook/blob/main/LICENSE">
+  <img src="https://img.shields.io/badge/license-%20%20GNU%20GPLv3%20-green?style=plastic" />
+  </a>
 </p>
 
 <p align="center">
