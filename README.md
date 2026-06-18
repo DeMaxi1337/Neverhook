@@ -8,22 +8,22 @@ Internal DLL mod menu for Geometry Dash with QoF features
 
 <p>
   <a href="https://github.com/DeMaxi1337/Neverhook/releases">
-    <img src="https://img.shields.io/github/v/release/DeMaxi1337/Neverhook?label=Release&color=blue&style=flat-square" />
+    <img src="https://img.shields.io/github/v/release/DeMaxi1337/Neverhook?label=Release&color=blue&style=flat" />
   </a>
   <a href="https://github.com/DeMaxi1337/Neverhook/stargazers">
-    <img src="https://img.shields.io/github/stars/DeMaxi1337/Neverhook?label=Stars&color=blue&style=flat-square" />
+    <img src="https://img.shields.io/github/stars/DeMaxi1337/Neverhook?label=Stars&color=blue&style=flat" />
   </a>
   <a href="https://github.com/DeMaxi1337/Neverhook/releases">
-    <img src="https://img.shields.io/github/downloads/DeMaxi1337/Neverhook/total?label=Downloads&color=brightgreen&style=flat-square" />
+    <img src="https://img.shields.io/github/downloads/DeMaxi1337/Neverhook/total?label=Downloads&color=brightgreen&style=flat" />
   </a>
   <a href="https://github.com/DeMaxi1337/Neverhook/issues">
-    <img src="https://img.shields.io/github/issues/DeMaxi1337/Neverhook?label=Issues&color=orange&style=flat-square" />
+    <img src="https://img.shields.io/github/issues/DeMaxi1337/Neverhook?label=Issues&color=orange&style=flat" />
   </a>
   <a href="https://t.me/demaxi1338/">
-    <img src="https://img.shields.io/badge/Telegram-t.me%2Fdemaxi1338-2CA5E0?logo=telegram&logoColor=white&style=flat-square" />
+    <img src="https://img.shields.io/badge/Telegram-t.me%2Fdemaxi1338-2CA5E0?logo=telegram&logoColor=white&style=flat" />
   </a>
   <a href="https://github.com/DeMaxi1337/Neverhook/blob/main/LICENSE">
-  <img src="https://img.shields.io/badge/license-%20%20GNU%20GPLv3%20-green?style=plastic" />
+    <img src="https://img.shields.io/github/license/DeMaxi1337/Neverhook?style=flat&color=brightgreen&logo=gnu&logoColor=white" />
   </a>
 </p>
 
