@@ -60,4 +60,4 @@ Expect occasional crashes, UI glitches, or incomplete features. If something bre
 
 ## Support me on Boosty!
 
-[![Boosty](https://img.shields.io/badge/Boosty-demaxi1337-FF6E2D?logoColor=white)](https://boosty.to/demaxi1337) - If you like this project, please support the developer on Boosty. It is the best way to help the project grow.
+[![Boosty](https://img.shields.io/badge/@demaxi1337-FF6E2D?logo=boosty&logoColor=white)](https://boosty.to/demaxi1337) - If you like this project, please support the developer on Boosty. It is the best way to help the project grow.
