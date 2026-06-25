@@ -57,3 +57,7 @@ Expect occasional crashes, UI glitches, or incomplete features. If something bre
 **DeMaxi1337** [![Telegram](https://img.shields.io/badge/@demaxi1338-2CA5E0?logo=telegram&logoColor=white)](https://t.me/demaxi1338) — main coder
 
 **spencer** [![Telegram](https://img.shields.io/badge/@burj7halifa-2CA5E0?logo=telegram&logoColor=white)](https://t.me/burj7halifa) — original GUI design (not a project contributor)
+
+## Support me on Boosty!
+
+https://boosty.to/demaxi1337 - If you like this project, please support the developer on Boosty. It is the best way to help the project grow.
