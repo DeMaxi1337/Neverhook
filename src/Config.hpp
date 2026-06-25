@@ -34,6 +34,34 @@ struct Config {
     bool  safeFreezeAttempts    = true;
     bool  safeFreezeJumps       = true;
 
+    bool  noDashFire        = false;
+    bool  noSpiderDash      = false;
+    bool  noWavePulse       = false;
+    bool  noWaveTrail       = false;
+    bool  solidWaveTrail    = false;
+    bool  waveTrailSize     = false;
+    float waveTrailSizeValue = 1.0f;
+    bool  noParticles       = false;
+
+    bool  hideEditorUI       = false;
+    bool  levelEdit          = false;
+    bool  noCustomObjLimit   = false;
+    bool  noZoomLimit        = false;
+    bool  toolboxButtonBypass = false;
+    bool  sliderLimitBypass  = false;
+
+    bool  jumpHack          = false;
+    bool  allModesPlatformer = false;
+    bool  hitboxMultiplier  = false;
+    float hitboxMultPlayer  = 1.0f;
+    float hitboxMultSolid   = 1.0f;
+    float hitboxMultHazard  = 1.0f;
+
+    bool  autoclicker      = false;
+    bool  autoclickerP2    = false;
+    float autoclickerCps   = 10.0f;
+    float autoclickerP2Cps = 10.0f;
+
     static Config& get() {
         static Config inst;
         return inst;
