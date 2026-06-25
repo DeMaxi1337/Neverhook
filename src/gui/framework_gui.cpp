@@ -246,7 +246,8 @@ void DrawFrameWorkGUI()
         EndChild();
 
         SetCursorPos(ImVec2(190, 20));
-        gui.button(ICON_FA_SAVE " Save", ImVec2(100, 25));
+        if (gui.button(ICON_FA_SAVE " Save", ImVec2(100, 25)))
+            Config::get().save();
 
         PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 
@@ -331,7 +332,71 @@ void DrawFrameWorkGUI()
 
             break;
 
-        case 4:  // Bypass  (was World)
+        case 2:  // Macros
+
+            gui.group_box(ICON_FA_MOUSE " Autoclicker", ImVec2(GetWindowWidth() / 2 - GetStyle().ItemSpacing.x / 2, GetWindowHeight())); {
+
+                gui.toggle("Player 1", &Vars::autoclicker);
+                if (Vars::autoclicker)
+                    gui.slider_float("P1 CPS", &Vars::autoclickerCps, 1.0f, 30.0f, "%.0f CPS");
+
+                Spacing();
+                gui.toggle("Player 2", &Vars::autoclickerP2);
+                if (Vars::autoclickerP2)
+                    gui.slider_float("P2 CPS", &Vars::autoclickerP2Cps, 1.0f, 30.0f, "%.0f CPS");
+
+            } gui.end_group_box();
+
+            break;
+
+        case 3:  // Cosmetic
+
+            gui.group_box(ICON_FA_USER " Visuals", ImVec2(GetWindowWidth() / 2 - GetStyle().ItemSpacing.x / 2, GetWindowHeight())); {
+
+                gui.toggle("Hide Attempts", &Vars::hideAttempts);
+                gui.toggle("No Glow", &Vars::noGlow);
+                gui.toggle("No Camera Shake", &Vars::noCameraShake);
+                gui.toggle("No Dash Fire", &Vars::noDashFire);
+                gui.toggle("No Spider Dash", &Vars::noSpiderDash);
+                gui.toggle("No Particles", &Vars::noParticles);
+
+                Spacing();
+                gui.toggle("No Wave Pulse", &Vars::noWavePulse);
+                gui.toggle("No Wave Trail", &Vars::noWaveTrail);
+                gui.toggle("Solid Wave Trail", &Vars::solidWaveTrail);
+                gui.toggle("Wave Trail Size", &Vars::waveTrailSize);
+                if (Vars::waveTrailSize)
+                    gui.slider_float("Size", &Vars::waveTrailSizeValue, 0.1f, 5.0f, "%.1fx");
+
+                gui.toggle("Accurate Percentage", &Vars::accuratePercent);
+                if (Vars::accuratePercent)
+                    gui.slider_int("Decimals", &Vars::accuratePercentDigits, 2, 4);
+
+                Spacing();
+                DrawWatermarkSettings();
+
+            } gui.end_group_box();
+
+            SameLine();
+
+            gui.group_box(ICON_FA_PALLET " Hitboxes", ImVec2(GetWindowWidth() / 2 - GetStyle().ItemSpacing.x / 2, GetWindowHeight())); {
+
+                gui.toggle("Show Hitboxes", &Vars::showHitboxes);
+                gui.toggle("Show On Death", &Vars::showHitboxesOnDeath);
+
+                Spacing();
+                gui.toggle("Hitbox Multiplier", &Vars::hitboxMultiplier);
+                if (Vars::hitboxMultiplier) {
+                    gui.slider_float("Player",  &Vars::hitboxMultPlayer, 0.1f, 3.0f, "%.1fx");
+                    gui.slider_float("Solids",  &Vars::hitboxMultSolid,  0.1f, 3.0f, "%.1fx");
+                    gui.slider_float("Hazards", &Vars::hitboxMultHazard, 0.1f, 3.0f, "%.1fx");
+                }
+
+            } gui.end_group_box();
+
+            break;
+
+        case 4:  // Bypass
 
             gui.group_box(ICON_FA_KEY " Bypass", ImVec2(GetWindowWidth() / 2 - GetStyle().ItemSpacing.x / 2, GetWindowHeight())); {
 
@@ -363,49 +428,31 @@ void DrawFrameWorkGUI()
                     PopItemWidth();
                 }
 
-            } gui.end_group_box();
-
-            break;
-
-        case 3:  // Cosmetic
-
-            gui.group_box(ICON_FA_USER " Visuals", ImVec2(GetWindowWidth() / 2 - GetStyle().ItemSpacing.x / 2, GetWindowHeight())); {
-
-                gui.toggle("Hide Attempts", &Vars::hideAttempts);
-                gui.toggle("No Glow", &Vars::noGlow);
-                gui.toggle("No Camera Shake", &Vars::noCameraShake);
-
-                gui.toggle("Accurate Percentage", &Vars::accuratePercent);
-                if (Vars::accuratePercent)
-                    gui.slider_int("Decimals", &Vars::accuratePercentDigits, 2, 4);
-
                 Spacing();
-                DrawWatermarkSettings();
+                gui.toggle("Jump Hack", &Vars::jumpHack);
+                gui.toggle("All Modes Platformer", &Vars::allModesPlatformer);
 
             } gui.end_group_box();
 
-            SameLine();
-
-            gui.group_box(ICON_FA_PALLET " Hitboxes", ImVec2(GetWindowWidth() / 2 - GetStyle().ItemSpacing.x / 2, GetWindowHeight())); {
-
-                gui.toggle("Show Hitboxes", &Vars::showHitboxes);
-                gui.toggle("Show On Death", &Vars::showHitboxesOnDeath);
-
-            } gui.end_group_box();
-
-            break;
-
-        case 2:  // Macros   -- placeholder, no widgets yet
-            gui.group_box(ICON_FA_MOUSE " Macros", ImVec2(GetWindowWidth(), GetWindowHeight())); {
-                TextDisabled("Macros coming soon...");
-            } gui.end_group_box();
             break;
 
         case 5:  // Creator
-            gui.group_box(ICON_FA_HAMMER " Creator", ImVec2(GetWindowWidth() / 2 - GetStyle().ItemSpacing.x / 2, GetWindowHeight())); {
+
+            gui.group_box(ICON_FA_HAMMER " Creator", ImVec2(GetWindowWidth(), GetWindowHeight())); {
+
                 gui.toggle("Verify Hack", &Vars::verifyHack);
                 gui.toggle("Copy Hack", &Vars::copyHack);
+
+                Spacing();
+                gui.toggle("Hide Editor UI", &Vars::hideEditorUI);
+                gui.toggle("Level Edit", &Vars::levelEdit);
+                gui.toggle("No Custom Obj Limit", &Vars::noCustomObjLimit);
+                gui.toggle("No Zoom Limit", &Vars::noZoomLimit);
+                gui.toggle("Toolbox Button Bypass", &Vars::toolboxButtonBypass);
+                gui.toggle("Slider Limit Bypass", &Vars::sliderLimitBypass);
+
             } gui.end_group_box();
+
             break;
 
         case 6:  // Scripts  -- placeholder, no widgets yet

@@ -34,6 +34,34 @@ namespace Vars {
     inline bool&  safeFreezeAttempts    = Config::get().safeFreezeAttempts;
     inline bool&  safeFreezeJumps       = Config::get().safeFreezeJumps;
 
+    inline bool&  noDashFire        = Config::get().noDashFire;
+    inline bool&  noSpiderDash      = Config::get().noSpiderDash;
+    inline bool&  noWavePulse       = Config::get().noWavePulse;
+    inline bool&  noWaveTrail       = Config::get().noWaveTrail;
+    inline bool&  solidWaveTrail    = Config::get().solidWaveTrail;
+    inline bool&  waveTrailSize     = Config::get().waveTrailSize;
+    inline float& waveTrailSizeValue = Config::get().waveTrailSizeValue;
+    inline bool&  noParticles       = Config::get().noParticles;
+
+    inline bool&  hideEditorUI       = Config::get().hideEditorUI;
+    inline bool&  levelEdit          = Config::get().levelEdit;
+    inline bool&  noCustomObjLimit   = Config::get().noCustomObjLimit;
+    inline bool&  noZoomLimit        = Config::get().noZoomLimit;
+    inline bool&  toolboxButtonBypass = Config::get().toolboxButtonBypass;
+    inline bool&  sliderLimitBypass  = Config::get().sliderLimitBypass;
+
+    inline bool&  jumpHack           = Config::get().jumpHack;
+    inline bool&  allModesPlatformer = Config::get().allModesPlatformer;
+    inline bool&  hitboxMultiplier   = Config::get().hitboxMultiplier;
+    inline float& hitboxMultPlayer   = Config::get().hitboxMultPlayer;
+    inline float& hitboxMultSolid    = Config::get().hitboxMultSolid;
+    inline float& hitboxMultHazard   = Config::get().hitboxMultHazard;
+
+    inline bool&  autoclicker      = Config::get().autoclicker;
+    inline bool&  autoclickerP2    = Config::get().autoclickerP2;
+    inline float& autoclickerCps   = Config::get().autoclickerCps;
+    inline float& autoclickerP2Cps = Config::get().autoclickerP2Cps;
+
     // is the menu currently open?
     inline bool   menuOpen       = false;
 }
