@@ -45,7 +45,7 @@ Internal DLL mod menu for Geometry Dash with QoF features
 
 ## Download
 
-Releases coming soon. 
+https://github.com/DeMaxi1337/Neverhook/releases/tag/v2.0.1-beta
 
 ## The project is under development!
 
