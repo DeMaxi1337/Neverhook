@@ -8,7 +8,7 @@
 	},
 	"id": "demaxi1337.neverhook",
 	"name": "Neverhook",
-	"version": "v2.0.0",
+	"version": "v2.0.2",
 	"developer": "DeMaxi1337",
 	"description": "Internal GD mod menu with a CS:GO-cheat-style GUI",
 	"dependencies": {
