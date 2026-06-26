@@ -1,6 +1,6 @@
 #include <Geode/Geode.hpp>
-#include "Config.hpp"
 #include <Geode/modify/CCDirector.hpp>
+#include "Config.hpp"
 
 using namespace geode::prelude;
 
@@ -68,6 +68,10 @@ void Config::load() {
     autoclickerP2    = m->getSavedValue<bool>("autoclickerP2", false);
     autoclickerCps   = (float)m->getSavedValue<double>("autoclickerCps", 10.0);
     autoclickerP2Cps = (float)m->getSavedValue<double>("autoclickerP2Cps", 10.0);
+
+    noTransition   = m->getSavedValue<bool>("noTransition",   false);
+    noPauseButton  = m->getSavedValue<bool>("noPauseButton",  false);
+    speedhackAudio = m->getSavedValue<bool>("speedhackAudio", false);
 }
 
 void Config::save() {
@@ -128,6 +132,10 @@ void Config::save() {
     m->setSavedValue("autoclickerP2", autoclickerP2);
     m->setSavedValue("autoclickerCps", (double)autoclickerCps);
     m->setSavedValue("autoclickerP2Cps", (double)autoclickerP2Cps);
+
+    m->setSavedValue("noTransition",   noTransition);
+    m->setSavedValue("noPauseButton",  noPauseButton);
+    m->setSavedValue("speedhackAudio", speedhackAudio);
 }
 
 void applyFPS() {
@@ -145,9 +153,10 @@ $on_mod(Loaded) {
     log::info("Neverhook loaded - press INSERT in game to open the menu");
 }
 
+// Geode 5.x has no $on_mod(Unloaded); autosave on every scene switch instead.
 class $modify(NHDirectorSave, CCDirector) {
-    void end() {
+    void willSwitchToScene(CCScene* scene) {
+        CCDirector::willSwitchToScene(scene);
         Config::get().save();
-        CCDirector::end();
     }
 };

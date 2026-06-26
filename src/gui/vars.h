@@ -62,6 +62,10 @@ namespace Vars {
     inline float& autoclickerCps   = Config::get().autoclickerCps;
     inline float& autoclickerP2Cps = Config::get().autoclickerP2Cps;
 
+    inline bool&  noTransition   = Config::get().noTransition;
+    inline bool&  noPauseButton  = Config::get().noPauseButton;
+    inline bool&  speedhackAudio = Config::get().speedhackAudio;
+
     // is the menu currently open?
     inline bool   menuOpen       = false;
 }

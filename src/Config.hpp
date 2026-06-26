@@ -62,6 +62,10 @@ struct Config {
     float autoclickerCps   = 10.0f;
     float autoclickerP2Cps = 10.0f;
 
+    bool  noTransition   = false;
+    bool  noPauseButton  = false;
+    bool  speedhackAudio = false;
+
     static Config& get() {
         static Config inst;
         return inst;

@@ -292,6 +292,7 @@ void DrawFrameWorkGUI()
                 gui.toggle("Noclip", &Vars::noclip);
                 gui.toggle("No Death Effect", &Vars::noDeathEffect);
                 gui.toggle("No Respawn Flash", &Vars::noRespawnFlash);
+                gui.toggle("No Pause Button", &Vars::noPauseButton);
 
             } gui.end_group_box();
 
@@ -304,6 +305,7 @@ void DrawFrameWorkGUI()
                 gui.toggle("Speedhack", &Vars::speedhack);
                 if (Vars::speedhack)
                     gui.slider_float("Speed", &Vars::speedhackValue, 0.1f, 5.0f, "%.2fx");
+                gui.toggle("Speedhack Audio", &Vars::speedhackAudio);
 
             } gui.end_group_box();
 
@@ -402,6 +404,7 @@ void DrawFrameWorkGUI()
 
                 gui.toggle("Practice Music", &Vars::practiceMusic);
                 gui.toggle("Icon Bypass", &Vars::iconBypass);
+                gui.toggle("No Transition", &Vars::noTransition);
 
                 Spacing();
                 gui.toggle("Safe Mode", &Vars::safeMode);
