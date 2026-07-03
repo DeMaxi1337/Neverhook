@@ -16,6 +16,7 @@
 #include "vars.h"      // Vars::noclip / speedhack / fpsUnlock / etc.
 #include "hooks.h"     // ApplyFPS()
 #include "watermark.h" // DrawWatermark() / DrawWatermarkSettings()
+#include "binds.h"     // BindSystem / DrawBindPopup / DrawHotkeysList / DrawBindsOverlay
 
 #include <string>
 #include <vector>
@@ -120,7 +121,11 @@ void DrawFrameWorkGUI()
     // Always-on overlay. It draws to the foreground draw list, so it must run
     // every frame regardless of the menu's open/closed/fade state. Keep it
     // ABOVE the fade gate below, otherwise it would vanish with the menu.
+    BindSystem::get().process();
     DrawWatermark();
+    BindSystem::get().drawBindsOverlay();
+    BindSystem::get().drawBindPopup();
+    BindSystem::get().drawHotkeysList();
 
     // -- Fade in / out ---------------------------------------------------------
     // m_fade tracks 0..1 independently of menuOpen so we can still render
@@ -290,6 +295,16 @@ void DrawFrameWorkGUI()
             gui.group_box(ICON_FA_USER " Player", ImVec2(GetWindowWidth(), GetWindowHeight())); {
 
                 gui.toggle("Noclip", &Vars::noclip);
+                gui.toggle("Noclip Hitsound", &Vars::noclipHitsound);
+                if (Vars::noclipHitsound)
+                    gui.slider_float("Hitsound Volume", &Vars::noclipHitsoundVolume, 0.f, 200.f, "%.0f%%");
+                gui.toggle("Noclip Tint", &Vars::noclipTint);
+                if (Vars::noclipTint) {
+                    ImGui::ColorEdit4("Tint Color", Vars::noclipTintColor,
+                        ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar);
+                    gui.slider_float("Tint Opacity", &Vars::noclipTintOpacity, 0.f, 100.f, "%.0f%%");
+                    gui.slider_float("Tint Fade", &Vars::noclipTintTime, 0.f, 3.f, "%.2fs");
+                }
                 gui.toggle("No Death Effect", &Vars::noDeathEffect);
                 gui.toggle("No Respawn Flash", &Vars::noRespawnFlash);
                 gui.toggle("No Pause Button", &Vars::noPauseButton);
@@ -330,6 +345,9 @@ void DrawFrameWorkGUI()
                     PopItemWidth();
                 }
 
+
+                Spacing();
+                // gui.toggle("Compact Lists", &Vars::compactLists);
             } gui.end_group_box();
 
             break;
@@ -361,6 +379,7 @@ void DrawFrameWorkGUI()
                 gui.toggle("No Dash Fire", &Vars::noDashFire);
                 gui.toggle("No Spider Dash", &Vars::noSpiderDash);
                 gui.toggle("No Particles", &Vars::noParticles);
+                gui.toggle("No Trail", &Vars::noTrail);
 
                 Spacing();
                 gui.toggle("No Wave Pulse", &Vars::noWavePulse);
@@ -376,6 +395,30 @@ void DrawFrameWorkGUI()
 
                 Spacing();
                 DrawWatermarkSettings();
+
+                Spacing();
+                gui.toggle("Keybinds", &Vars::keybindsList);
+                {
+                    static float kbExpand = 0.f;
+                    const float kbDt = GetIO().DeltaTime > 0.f ? GetIO().DeltaTime : 1.f / 60.f;
+                    kbExpand += ((Vars::keybindsList ? 1.f : 0.f) - kbExpand) * ImMin(1.f, kbDt * 12.f);
+                    if (kbExpand > 0.004f) {
+                        static float kbFullH = 52.f;
+                        BeginChild("##kbStyleGroup", ImVec2(GetContentRegionAvail().x, kbFullH * kbExpand),
+                                   false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+                        PushStyleVar(ImGuiStyleVar_Alpha, GetStyle().Alpha * kbExpand);
+                        PushID("keybindsStyle");
+                        static const char* kb_styles[] = { "Version 1.5", "Onetap v3", "Skeet" };
+                        wm_combo("Style", &Vars::keybindsStyle, kb_styles, IM_ARRAYSIZE(kb_styles));
+                        static const char* kb_lines[] = { "Static", "Gradient" };
+                        wm_combo("Line", &Vars::keybindsLine, kb_lines, IM_ARRAYSIZE(kb_lines));
+                        const float kbY1 = GetCursorPosY();
+                        PopID();
+                        PopStyleVar();
+                        EndChild();
+                        if (Vars::keybindsList) kbFullH = ImMax(28.f, kbY1 + 4.f);
+                    }
+                }
 
             } gui.end_group_box();
 

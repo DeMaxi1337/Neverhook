@@ -3,6 +3,14 @@
 
 namespace Vars {
     inline bool&  noclip         = Config::get().noclip;
+    inline bool&   noclipTint       = Config::get().noclipTint;
+    inline float*  noclipTintColor  = Config::get().noclipTintColor;
+    inline float&  noclipTintOpacity= Config::get().noclipTintOpacity;
+    inline float&  noclipTintTime   = Config::get().noclipTintTime;
+    inline bool&   noclipHitsound   = Config::get().noclipHitsound;
+    inline float&  noclipHitsoundVolume = Config::get().noclipHitsoundVolume;
+    inline int&    noclipDeaths     = Config::get().noclipDeaths;
+    inline double& noclipAccuracy   = Config::get().noclipAccuracy;
     inline bool&  noDeathEffect  = Config::get().noDeathEffect;
     inline bool&  noRespawnFlash = Config::get().noRespawnFlash;
     inline bool&  practiceMusic  = Config::get().practiceMusic;
@@ -24,6 +32,7 @@ namespace Vars {
 
     inline bool&  tpsBypass             = Config::get().tpsBypass;
     inline float& tpsValue              = Config::get().tpsValue;
+    // inline bool&  compactLists          = Config::get().compactLists;
 
     inline bool&  noMirrorPortal        = Config::get().noMirrorPortal;
     inline bool&  instantComplete       = Config::get().instantComplete;
@@ -42,6 +51,7 @@ namespace Vars {
     inline bool&  waveTrailSize     = Config::get().waveTrailSize;
     inline float& waveTrailSizeValue = Config::get().waveTrailSizeValue;
     inline bool&  noParticles       = Config::get().noParticles;
+    inline bool&  noTrail           = Config::get().noTrail;
 
     inline bool&  hideEditorUI       = Config::get().hideEditorUI;
     inline bool&  levelEdit          = Config::get().levelEdit;
@@ -66,6 +76,32 @@ namespace Vars {
     inline bool&  noPauseButton  = Config::get().noPauseButton;
     inline bool&  speedhackAudio = Config::get().speedhackAudio;
 
-    // is the menu currently open?
+    inline bool&  watermark       = Config::get().watermark;
+    inline int&   watermarkStyle  = Config::get().watermarkStyle;
+    inline int&   watermarkLine   = Config::get().watermarkLine;
+    inline int&   watermarkPos    = Config::get().watermarkPos;
+    inline bool&  wmGlow          = Config::get().wmGlow;
+    inline bool&  wmGlobal        = Config::get().wmGlobal;
+    inline bool&  wmBackground    = Config::get().wmBackground;
+    inline bool&  wmShowName      = Config::get().wmShowName;
+    inline bool&  wmShowUser      = Config::get().wmShowUser;
+    inline bool&  wmShowFps       = Config::get().wmShowFps;
+    inline bool&  wmShowTime      = Config::get().wmShowTime;
+    inline bool&   wmShowNcAcc      = Config::get().wmShowNcAcc;
+    inline bool&   wmShowNcDeaths   = Config::get().wmShowNcDeaths;
+    inline int&   wmNameColorMode = Config::get().wmNameColorMode;
+    inline float* wmColorOne      = Config::get().wmColorOne;
+    inline float* wmColorTwo      = Config::get().wmColorTwo;
+
+    inline bool&  keybindsList    = Config::get().keybindsList;
+    inline int&   keybindsStyle   = Config::get().keybindsStyle;
+    inline int&   keybindsLine    = Config::get().keybindsLine;
+    inline int&   keybindsPos     = Config::get().keybindsPos;
+    inline bool&  kbGlow          = Config::get().kbGlow;
+    inline bool&  kbGlobal        = Config::get().kbGlobal;
+    inline bool&  kbBackground    = Config::get().kbBackground;
+    inline float& keybindsX       = Config::get().keybindsX;
+    inline float& keybindsY       = Config::get().keybindsY;
+
     inline bool   menuOpen       = false;
 }

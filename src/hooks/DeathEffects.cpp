@@ -1,17 +1,10 @@
 #include <Geode/Geode.hpp>
-#include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
 #include "../Config.hpp"
 
 using namespace geode::prelude;
 
-class $modify(NHPlayLayer, PlayLayer) {
-    void destroyPlayer(PlayerObject* player, GameObject* object) {
-        if (Config::get().noclip) return;
-        PlayLayer::destroyPlayer(player, object);
-    }
-};
-
+// No Death Effect / No Respawn Flash.
 class $modify(NHPlayerObject, PlayerObject) {
     void playDeathEffect() {
         if (Config::get().noDeathEffect) return;

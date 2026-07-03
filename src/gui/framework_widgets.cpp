@@ -1,4 +1,5 @@
 #include "framework_widgets.h"
+#include "binds.h"
 
 using namespace ImGui;
 
@@ -165,6 +166,11 @@ bool c_gui::toggle( const char* label, bool* v ) {
     if ( pressed )
         *v = !*v;
 
+    if ( hovered && BindSystem::get( ).rmbClicked( ) ) {
+        BindSystem::get( ).registerBool( label, v );
+        BindSystem::get( ).openPopup( label );
+    }
+
     // -- on/off transition ----------------------------------------------------
     static std::unordered_map< ImGuiID, float > anims;
     auto it = anims.find( id );
@@ -217,10 +223,12 @@ bool c_gui::button( const char* label, ImVec2 size_arg ) {
     auto draw = window->DrawList;
     auto pos  = window->DC.CursorPos;
 
-    const auto label_size = CalcTextSize( label, 0, true );
+    const char* label_end = FindRenderedTextEnd( label );
+    const auto  label_size = CalcTextSize( label, label_end, true );
 
     ImVec2 sz = size_arg;
-    if ( sz.x <= 0.f ) sz.x = label_size.x + 16.f;
+    if ( sz.x < 0.f )       sz.x = GetContentRegionAvail( ).x;
+    else if ( sz.x == 0.f ) sz.x = label_size.x + 16.f;
     if ( sz.y <= 0.f ) sz.y = label_size.y + 8.f;
 
     ImRect bb( pos, pos + sz );
@@ -247,7 +255,7 @@ bool c_gui::button( const char* label, ImVec2 size_arg ) {
     draw->AddRect      ( bb.Min, bb.Max, gui.border.to_im_color( ),      4.f );
 
     draw->AddText( bb.GetCenter( ) - label_size * 0.5f,
-                   GetColorU32( ImGuiCol_Text ), label );
+                   GetColorU32( ImGuiCol_Text ), label, label_end );
 
     return pressed;
 }
@@ -312,11 +320,57 @@ static bool _slider_scalar( const char* label, ImGuiDataType data_type, void* p_
     if ( changed )
         DataTypeFormatString( value_buf, IM_ARRAYSIZE( value_buf ), data_type, p_v, format );
 
+    if ( data_type == ImGuiDataType_Float
+      && s_hovered && BindSystem::get( ).rmbClicked( ) ) {
+        BindSystem::get( ).registerFloat( label, (float*)p_v,
+                                          *(const float*)p_min, *(const float*)p_max );
+        BindSystem::get( ).openPopup( label );
+    }
+
     // -- top text row ---------------------------------------------------------
     draw->AddText( pos,
                    GetColorU32( ImGuiCol_Text ), label );
-    draw->AddText( ImVec2( bb.Max.x - value_size.x, pos.y ),
-                   GetColorU32( ImGuiCol_TextDisabled ), value_buf );
+
+    // click-to-type: clicking the value turns it into an inline numeric input
+    static ImGuiID s_sl_edit_id    = 0;
+    static bool    s_sl_edit_focus = false;
+
+    if ( s_sl_edit_id == id ) {
+        const float  edit_w        = ImMax( value_size.x + 14.f, 56.f );
+        const ImVec2 layout_cursor = window->DC.CursorPos;
+        SetCursorScreenPos( ImVec2( bb.Max.x - edit_w, pos.y - 3.f ) );
+        SetNextItemWidth( edit_w );
+        PushStyleColor( ImGuiCol_FrameBg, (ImU32)gui.frame_active.to_im_color( ) );
+        char edit_lbl[ 32 ];
+        snprintf( edit_lbl, sizeof( edit_lbl ), "##sledit%u", (unsigned)id );
+        if ( s_sl_edit_focus ) { SetKeyboardFocusHere( ); s_sl_edit_focus = false; }
+        bool commit = false;
+        if ( data_type == ImGuiDataType_Float )
+            commit = InputFloat( edit_lbl, (float*)p_v, 0.f, 0.f, format,
+                                 ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll );
+        else
+            commit = InputInt( edit_lbl, (int*)p_v, 0, 0,
+                               ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll );
+        PopStyleColor( 1 );
+        if ( commit || IsItemDeactivated( ) ) {
+            if ( data_type == ImGuiDataType_Float )
+                *(float*)p_v = ImClamp( *(float*)p_v, *(const float*)p_min, *(const float*)p_max );
+            else
+                *(int*)p_v = ImClamp( *(int*)p_v, *(const int*)p_min, *(const int*)p_max );
+            s_sl_edit_id = 0;
+            changed = true;
+        }
+        window->DC.CursorPos = layout_cursor;
+    } else {
+        draw->AddText( ImVec2( bb.Max.x - value_size.x, pos.y ),
+                       GetColorU32( ImGuiCol_TextDisabled ), value_buf );
+        const ImRect value_rect( ImVec2( bb.Max.x - value_size.x - 4.f, pos.y ),
+                                 ImVec2( bb.Max.x, pos.y + text_h ) );
+        if ( IsMouseHoveringRect( value_rect.Min, value_rect.Max ) && IsMouseClicked( 0 ) ) {
+            s_sl_edit_id    = id;
+            s_sl_edit_focus = true;
+        }
+    }
 
     // -- compute fill ratio from raw value (edge-to-edge) ---------------------
     float t = 0.f;

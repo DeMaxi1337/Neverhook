@@ -125,6 +125,12 @@ private:
         }
 
         auto r = rectOf(o);
+
+        if (o->m_objectType == GameObjectType::Slope) {
+            strokeSlope(o, r, hollow, col);
+            return;
+        }
+
         CCPoint quad[4] = {
             ccp(r.getMinX(), r.getMinY()),
             ccp(r.getMaxX(), r.getMinY()),
@@ -138,6 +144,35 @@ private:
             quad[3] = o->m_orientedBox->m_corners[3];
         }
         drawPolygon(quad, 4, hollow, OUTLINE, col);
+    }
+
+    void strokeSlope(GameObject* o, cocos2d::CCRect const& r,
+                     ccColor4F const& hollow, ccColor4F const& col) {
+        CCPoint c[4] = {
+            ccp(r.getMinX(), r.getMinY()),
+            ccp(r.getMaxX(), r.getMinY()),
+            ccp(r.getMaxX(), r.getMaxY()),
+            ccp(r.getMinX(), r.getMaxY()),
+        };
+
+        int empty = 3;
+        if (o->isFlipX())
+            empty = (empty == 0) ? 1 : (empty == 1) ? 0 : (empty == 2) ? 3 : 2;
+        if (o->isFlipY())
+            empty = (empty == 0) ? 3 : (empty == 3) ? 0 : (empty == 1) ? 2 : 1;
+
+        float rot   = o->getRotation();
+        int   steps = (int)((rot + (rot >= 0 ? 45.f : -45.f)) / 90.f) % 4;
+        if (steps < 0) steps += 4;
+        for (int s = 0; s < steps; ++s)
+            empty = (empty == 3) ? 2 : (empty == 2) ? 1 : (empty == 1) ? 0 : 3;
+
+        CCPoint tri[3];
+        int n = 0;
+        for (int i = 0; i < 4; ++i)
+            if (i != empty) tri[n++] = c[i];
+
+        drawPolygon(tri, 3, hollow, OUTLINE, col);
     }
 
     void strokeRect(cocos2d::CCRect const& r, ccColor4F const& col) {
