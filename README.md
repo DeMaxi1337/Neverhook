@@ -45,7 +45,7 @@ Mod menu for Geometry Dash with QoF features
 
 ## Download
 
-https://github.com/DeMaxi1337/Neverhook/releases/tag/v2.0.1-beta
+https://github.com/DeMaxi1337/Neverhook/releases/tag/v2.0.3-beta
 
 ## The project is under development!
 
