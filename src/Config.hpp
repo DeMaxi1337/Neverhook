@@ -1,6 +1,12 @@
 #pragma once
 #include <Geode/Geode.hpp>
 
+// GD advances m_gameState.m_currentProgress by two units per physics tick,
+// whereas the conventional frame number (as shown by Mega Hack and TAS tools)
+// counts one per tick. Divide the raw progress by this to get that frame
+// number. Single source of truth so the conversion never drifts across files.
+inline constexpr int kProgressPerFrame = 2;
+
 struct Config {
     bool  noclip          = false;
     bool   noclipTint        = false;
@@ -14,6 +20,7 @@ struct Config {
     bool  noDeathEffect   = false;
     bool  noRespawnFlash  = false;
     bool  practiceMusic   = false;
+    bool  practiceFix      = false;
     bool  iconBypass      = false;
     bool  speedhack       = false;
     float speedhackValue  = 1.0f;
@@ -27,14 +34,23 @@ struct Config {
     int   accuratePercentDigits = 2;
     bool  noGlow                = false;
     bool  noCameraShake         = false;
+    bool  noEndShake            = false;
     bool  showHitboxes          = false;
     bool  showHitboxesOnDeath   = false;
+    bool  showTrajectory        = false;
 
     bool  tpsBypass             = false;
     float tpsValue              = 240.0f;
     // bool  compactLists          = false;
 
     bool  noMirrorPortal        = false;
+    bool  smartStartpos         = true;
+    bool  startposSwitcher      = false;
+    bool  frameAdvance          = false;
+    int   faStepKey             = 67;
+    bool  faHold                = false;
+    float faHoldDelayCfg        = 0.25f;
+    int   faHoldSpeedCfg        = 5;
     bool  instantComplete       = false;
     bool  instantRestart        = false;
     bool  customRespawn         = false;
@@ -89,6 +105,7 @@ struct Config {
     bool  wmShowTime       = true;
     bool  wmShowNcAcc      = false;
     bool  wmShowNcDeaths   = false;
+    bool  wmShowFrame      = false;
     int   wmNameColorMode  = 0;
     float wmColorOne[4]    = { 0.30f, 0.49f, 1.00f, 1.00f };
     float wmColorTwo[4]    = { 0.65f, 0.80f, 1.00f, 1.00f };
@@ -102,6 +119,20 @@ struct Config {
     bool  kbBackground     = true;
     float keybindsX        = 0.012f;
     float keybindsY        = 0.045f;
+
+    // --- Ported level / bypass functions ---
+    bool  noShader = false;
+    bool  noPortalLightning = false;
+    bool  hideLevelCompleteVfx = false;
+    bool  noMusicFadeOut = false;
+    bool  autoPracticeMode = false;
+    bool  autoPickupCoins = false;
+    bool  pauseDuringComplete = false;
+    bool  autoSongDownload = false;
+    bool  layoutMode = false;
+    bool  unlockMainLevels = false;
+    bool  unlockShops = false;
+    bool  unlockVaults = false;
 
     static Config& get() {
         static Config inst;

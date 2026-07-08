@@ -24,6 +24,11 @@ namespace {
 class $modify(NHTpsLayer, GJBaseGameLayer) {
     double getModifiedDelta(float dt) {
         auto& c = Config::get();
+
+        // Frame advance drives the delta itself in FrameAdvance.cpp, so stay
+        // out of its way and let the game process the fed delta normally.
+        if (c.frameAdvance)
+            return GJBaseGameLayer::getModifiedDelta(dt);
         if (!c.tpsBypass || m_isEditor)
             return GJBaseGameLayer::getModifiedDelta(dt);
 
@@ -49,6 +54,10 @@ class $modify(NHTpsLayer, GJBaseGameLayer) {
 
     void update(float dt) {
         auto& c = Config::get();
+        if (c.frameAdvance) {
+            GJBaseGameLayer::update(dt);
+            return;
+        }
         if (c.tpsBypass && m_started && !m_isEditor) {
             int passes = passesThisFrame(targetTps());
             for (int i = 0; i < passes; ++i)

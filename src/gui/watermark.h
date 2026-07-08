@@ -16,6 +16,7 @@
 #include <cstdio>
 #include <ctime>
 #include <cmath>
+#include <chrono>
 
 using namespace ImGui;
 
@@ -219,12 +220,14 @@ inline void DrawWatermarkSettings()
         OpenPopup("##wm_name_cfg");
     wm_name_color_popup();
 
-    wm_row("Username",  &Vars::wmShowUser, false);
     wm_row("FPS",       &Vars::wmShowFps,  false);
     wm_row("Clock",     &Vars::wmShowTime, false);
     wm_row("Noclip Accuracy", &Vars::wmShowNcAcc, false);
     wm_row("Noclip Deaths",   &Vars::wmShowNcDeaths, false);
+    wm_row("Frame Counter",   &Vars::wmShowFrame, false);
 }
+
+#include "../hooks/FrameAdvanceState.hpp"
 
 inline void DrawWatermark()
 {
@@ -238,11 +241,25 @@ inline void DrawWatermark()
     std::vector<Seg> segs;
 
     if (Vars::wmShowName) segs.push_back({ "Neverhook", true });
-    if (Vars::wmShowUser) segs.push_back({ "demaxihvh", false });
     if (Vars::wmShowFps)
     {
+        // io.Framerate is a heavily smoothed 60-frame average and lags badly
+        // (e.g. still reads 240 right after switching the FPS bypass to 480).
+        // Measure the real render rate ourselves over a short window instead.
+        using clock = std::chrono::steady_clock;
+        static clock::time_point s_last  = clock::now();
+        static double s_window = 0.0;
+        static int    s_frames = 0;
+        static double s_shown  = 0.0;
+
+        const clock::time_point now = clock::now();
+        const double dt = std::chrono::duration<double>(now - s_last).count();
+        s_last = now;
+        if (dt > 0.0 && dt < 1.0) { s_window += dt; ++s_frames; }
+        if (s_window >= 0.25) { s_shown = s_frames / s_window; s_window = 0.0; s_frames = 0; }
+
         char b[32];
-        std::snprintf(b, sizeof(b), "%.0f fps", io.Framerate);
+        std::snprintf(b, sizeof(b), "%.0f fps", s_shown);
         segs.push_back({ b, false });
     }
     if (Vars::wmShowTime)
@@ -265,6 +282,15 @@ inline void DrawWatermark()
     {
         char b[32];
         std::snprintf(b, sizeof(b), "%d deaths", Vars::noclipDeaths);
+        segs.push_back({ b, false });
+    }
+
+    if (Vars::wmShowFrame)
+    {
+        int fr = 0;
+        if (auto gjbgl = GJBaseGameLayer::get()) fr = gjbgl->m_gameState.m_currentProgress / kProgressPerFrame;
+        char b[32];
+        std::snprintf(b, sizeof(b), "frame %d", fr);
         segs.push_back({ b, false });
     }
 

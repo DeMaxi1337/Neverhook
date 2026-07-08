@@ -1,4 +1,3 @@
-// thanks claude opus 4.8 to port this gui
 
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -19,6 +18,7 @@
 #include "binds.h"     // BindSystem / DrawBindPopup / DrawHotkeysList / DrawBindsOverlay
 
 #include <string>
+#include "../hooks/FrameAdvanceState.hpp"
 #include <vector>
 
 using namespace ImGui;
@@ -375,7 +375,8 @@ void DrawFrameWorkGUI()
 
                 gui.toggle("Hide Attempts", &Vars::hideAttempts);
                 gui.toggle("No Glow", &Vars::noGlow);
-                gui.toggle("No Camera Shake", &Vars::noCameraShake);
+                // gui.toggle("No Camera Shake", &Vars::noCameraShake);
+                // gui.toggle("No End Shake", &Vars::noEndShake);
                 gui.toggle("No Dash Fire", &Vars::noDashFire);
                 gui.toggle("No Spider Dash", &Vars::noSpiderDash);
                 gui.toggle("No Particles", &Vars::noParticles);
@@ -386,6 +387,10 @@ void DrawFrameWorkGUI()
                 gui.toggle("No Wave Trail", &Vars::noWaveTrail);
                 gui.toggle("Solid Wave Trail", &Vars::solidWaveTrail);
                 gui.toggle("Wave Trail Size", &Vars::waveTrailSize);
+                gui.toggle("No Shader", &Vars::noShader);
+                // gui.toggle("No Portal Lightning", &Vars::noPortalLightning);
+                gui.toggle("Hide Complete VFX", &Vars::hideLevelCompleteVfx);
+                gui.toggle("No Music Fade Out", &Vars::noMusicFadeOut);
                 if (Vars::waveTrailSize)
                     gui.slider_float("Size", &Vars::waveTrailSizeValue, 0.1f, 5.0f, "%.1fx");
 
@@ -428,6 +433,7 @@ void DrawFrameWorkGUI()
 
                 gui.toggle("Show Hitboxes", &Vars::showHitboxes);
                 gui.toggle("Show On Death", &Vars::showHitboxesOnDeath);
+                gui.toggle("Trajectory Prediction", &Vars::showTrajectory);
 
                 Spacing();
                 gui.toggle("Hitbox Multiplier", &Vars::hitboxMultiplier);
@@ -446,7 +452,11 @@ void DrawFrameWorkGUI()
             gui.group_box(ICON_FA_KEY " Bypass", ImVec2(GetWindowWidth() / 2 - GetStyle().ItemSpacing.x / 2, GetWindowHeight())); {
 
                 gui.toggle("Practice Music", &Vars::practiceMusic);
+                gui.toggle("Practice Fix", &Vars::practiceFix);
                 gui.toggle("Icon Bypass", &Vars::iconBypass);
+                gui.toggle("Unlock Main Levels", &Vars::unlockMainLevels);
+                gui.toggle("Unlock Shops", &Vars::unlockShops);
+                gui.toggle("Unlock Vaults", &Vars::unlockVaults);
                 gui.toggle("No Transition", &Vars::noTransition);
 
                 Spacing();
@@ -464,6 +474,33 @@ void DrawFrameWorkGUI()
 
                 gui.toggle("Instant Complete", &Vars::instantComplete);
                 gui.toggle("No Mirror Portal", &Vars::noMirrorPortal);
+                gui.toggle("Smart StartPos", &Vars::smartStartpos);
+                gui.toggle("StartPos Switcher", &Vars::startposSwitcher);
+                gui.toggle("Frame Advance", &Vars::frameAdvance);
+                if (Vars::frameAdvance) {
+                    char btnLabel[48];
+                    int k = Vars::faStepKey;
+                    if (nh::faKeyWaiting)
+                        snprintf(btnLabel, sizeof(btnLabel), "Step Key: [press key...]");
+                    else if (k >= 65 && k <= 90)
+                        snprintf(btnLabel, sizeof(btnLabel), "Step Key: [%c]", (char)k);
+                    else if (k >= 48 && k <= 57)
+                        snprintf(btnLabel, sizeof(btnLabel), "Step Key: [%c]", (char)k);
+                    else
+                        snprintf(btnLabel, sizeof(btnLabel), "Step Key: [#%d]", k);
+                    PushItemWidth(-1);
+                    if (Button(btnLabel, ImVec2(-1, 0)))
+                        nh::faKeyWaiting = true;
+                    PopItemWidth();
+
+                    gui.toggle("Hold to Step", &Vars::faHold);
+                    if (Vars::faHold) {
+                        PushItemWidth(-1);
+                        InputFloat("##faHoldDelay", &Vars::faHoldDelayCfg, 0.f, 0.f, "%.2f s delay");
+                        InputInt("##faHoldSpeed", &Vars::faHoldSpeedCfg);
+                        PopItemWidth();
+                    }
+                }
 
                 Spacing();
                 gui.toggle("Instant Restart", &Vars::instantRestart);
@@ -477,6 +514,11 @@ void DrawFrameWorkGUI()
                 Spacing();
                 gui.toggle("Jump Hack", &Vars::jumpHack);
                 gui.toggle("All Modes Platformer", &Vars::allModesPlatformer);
+                gui.toggle("Auto Practice Mode", &Vars::autoPracticeMode);
+                gui.toggle("Auto Pickup Coins", &Vars::autoPickupCoins);
+                gui.toggle("Pause On Complete", &Vars::pauseDuringComplete);
+                gui.toggle("Auto Song Download", &Vars::autoSongDownload);
+                gui.toggle("Layout Mode", &Vars::layoutMode);
 
             } gui.end_group_box();
 

@@ -14,6 +14,7 @@ namespace Vars {
     inline bool&  noDeathEffect  = Config::get().noDeathEffect;
     inline bool&  noRespawnFlash = Config::get().noRespawnFlash;
     inline bool&  practiceMusic  = Config::get().practiceMusic;
+    inline bool&  practiceFix     = Config::get().practiceFix;
     inline bool&  iconBypass     = Config::get().iconBypass;
     inline bool&  speedhack      = Config::get().speedhack;
     inline float& speedhackValue = Config::get().speedhackValue;
@@ -27,14 +28,23 @@ namespace Vars {
     inline int&   accuratePercentDigits = Config::get().accuratePercentDigits;
     inline bool&  noGlow                = Config::get().noGlow;
     inline bool&  noCameraShake         = Config::get().noCameraShake;
+    inline bool&  noEndShake            = Config::get().noEndShake;
     inline bool&  showHitboxes          = Config::get().showHitboxes;
     inline bool&  showHitboxesOnDeath   = Config::get().showHitboxesOnDeath;
+    inline bool&  showTrajectory        = Config::get().showTrajectory;
 
     inline bool&  tpsBypass             = Config::get().tpsBypass;
     inline float& tpsValue              = Config::get().tpsValue;
     // inline bool&  compactLists          = Config::get().compactLists;
 
     inline bool&  noMirrorPortal        = Config::get().noMirrorPortal;
+    inline bool&  smartStartpos         = Config::get().smartStartpos;
+    inline bool&  startposSwitcher      = Config::get().startposSwitcher;
+    inline bool&  frameAdvance          = Config::get().frameAdvance;
+    inline int&   faStepKey             = Config::get().faStepKey;
+    inline bool&  faHold                = Config::get().faHold;
+    inline float& faHoldDelayCfg        = Config::get().faHoldDelayCfg;
+    inline int&   faHoldSpeedCfg        = Config::get().faHoldSpeedCfg;
     inline bool&  instantComplete       = Config::get().instantComplete;
     inline bool&  instantRestart        = Config::get().instantRestart;
     inline bool&  customRespawn         = Config::get().customRespawn;
@@ -89,6 +99,7 @@ namespace Vars {
     inline bool&  wmShowTime      = Config::get().wmShowTime;
     inline bool&   wmShowNcAcc      = Config::get().wmShowNcAcc;
     inline bool&   wmShowNcDeaths   = Config::get().wmShowNcDeaths;
+    inline bool&   wmShowFrame      = Config::get().wmShowFrame;
     inline int&   wmNameColorMode = Config::get().wmNameColorMode;
     inline float* wmColorOne      = Config::get().wmColorOne;
     inline float* wmColorTwo      = Config::get().wmColorTwo;
@@ -102,6 +113,19 @@ namespace Vars {
     inline bool&  kbBackground    = Config::get().kbBackground;
     inline float& keybindsX       = Config::get().keybindsX;
     inline float& keybindsY       = Config::get().keybindsY;
+
+    inline bool&  noShader = Config::get().noShader;
+    inline bool&  noPortalLightning = Config::get().noPortalLightning;
+    inline bool&  hideLevelCompleteVfx = Config::get().hideLevelCompleteVfx;
+    inline bool&  noMusicFadeOut = Config::get().noMusicFadeOut;
+    inline bool&  autoPracticeMode = Config::get().autoPracticeMode;
+    inline bool&  autoPickupCoins = Config::get().autoPickupCoins;
+    inline bool&  pauseDuringComplete = Config::get().pauseDuringComplete;
+    inline bool&  autoSongDownload = Config::get().autoSongDownload;
+    inline bool&  layoutMode = Config::get().layoutMode;
+    inline bool&  unlockMainLevels = Config::get().unlockMainLevels;
+    inline bool&  unlockShops = Config::get().unlockShops;
+    inline bool&  unlockVaults = Config::get().unlockVaults;
 
     inline bool   menuOpen       = false;
 }
