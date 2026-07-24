@@ -4,7 +4,6 @@
 
 using namespace geode::prelude;
 
-// All Modes Platformer -- lets wave/swing portals trigger in platformer mode.
 class $modify(NHAllModesPlatformer, GJBaseGameLayer) {
     void collisionCheckObjects(PlayerObject* p0, gd::vector<GameObject*>* p1, int p2, float p3) {
         GJBaseGameLayer::collisionCheckObjects(p0, p1, p2, p3);
