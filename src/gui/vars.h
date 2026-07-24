@@ -20,6 +20,7 @@ namespace Vars {
     inline float& speedhackValue = Config::get().speedhackValue;
     inline bool&  fpsUnlock      = Config::get().fpsUnlock;
     inline float& fpsValue       = Config::get().fpsValue;
+    inline bool&  frameExtrapolation = Config::get().frameExtrapolation;
     inline bool&  verifyHack     = Config::get().verifyHack;
     inline bool&  copyHack       = Config::get().copyHack;
 
@@ -35,7 +36,7 @@ namespace Vars {
 
     inline bool&  tpsBypass             = Config::get().tpsBypass;
     inline float& tpsValue              = Config::get().tpsValue;
-    // inline bool&  compactLists          = Config::get().compactLists;
+    inline bool&  compactList           = Config::get().compactList;
 
     inline bool&  noMirrorPortal        = Config::get().noMirrorPortal;
     inline bool&  smartStartpos         = Config::get().smartStartpos;
@@ -82,6 +83,10 @@ namespace Vars {
     inline float& autoclickerCps   = Config::get().autoclickerCps;
     inline float& autoclickerP2Cps = Config::get().autoclickerP2Cps;
 
+    inline int&   macroPlaybackAttempt   = Config::get().macroPlaybackAttempt;
+    inline bool&  macroIgnoreInputs      = Config::get().macroIgnoreInputs;
+    inline bool&  macroAutoPlayback      = Config::get().macroAutoPlayback;
+
     inline bool&  noTransition   = Config::get().noTransition;
     inline bool&  noPauseButton  = Config::get().noPauseButton;
     inline bool&  speedhackAudio = Config::get().speedhackAudio;
@@ -126,6 +131,20 @@ namespace Vars {
     inline bool&  unlockMainLevels = Config::get().unlockMainLevels;
     inline bool&  unlockShops = Config::get().unlockShops;
     inline bool&  unlockVaults = Config::get().unlockVaults;
+
+    inline bool&  hidePlayer        = Config::get().hidePlayer;
+    inline bool&  playerOnTop       = Config::get().playerOnTop;
+    inline bool&  noRobotFire       = Config::get().noRobotFire;
+    inline bool&  noSwingFire       = Config::get().noSwingFire;
+    inline bool&  noGhostTrail      = Config::get().noGhostTrail;
+    inline bool&  noTrailBehindWave = Config::get().noTrailBehindWave;
+    inline bool&  noCircleWave      = Config::get().noCircleWave;
+    inline bool&  randomSeed        = Config::get().randomSeed;
+    inline int&   randomSeedValue   = Config::get().randomSeedValue;
+
+    inline bool&  autoSave      = Config::get().autoSave;
+    inline int&   menuScale     = Config::get().menuScale;
+    inline float& menuAnimSpeed = Config::get().menuAnimSpeed;
 
     inline bool   menuOpen       = false;
 }

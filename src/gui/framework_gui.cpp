@@ -15,13 +15,24 @@
 #include "vars.h"      // Vars::noclip / speedhack / fpsUnlock / etc.
 #include "hooks.h"     // ApplyFPS()
 #include "watermark.h" // DrawWatermark() / DrawWatermarkSettings()
+#include "about.h"     // DrawAboutWindow() / g_aboutOpen
 #include "binds.h"     // BindSystem / DrawBindPopup / DrawHotkeysList / DrawBindsOverlay
+#include "../hooks/MacroEngine.hpp" // nh::MacroEngine
 
 #include <string>
+#include <cstring>
 #include "../hooks/FrameAdvanceState.hpp"
 #include <vector>
 
 using namespace ImGui;
+
+// Format an integer with comma thousands separators (e.g. 12684 -> "12,684").
+static std::string nh_group_thousands(size_t n) {
+    std::string s = std::to_string(n);
+    int insert = static_cast<int>(s.size()) - 3;
+    while (insert > 0) { s.insert(insert, ","); insert -= 3; }
+    return s;
+}
 
 void FrameWorkInit()
 {
@@ -121,11 +132,35 @@ void DrawFrameWorkGUI()
     // Always-on overlay. It draws to the foreground draw list, so it must run
     // every frame regardless of the menu's open/closed/fade state. Keep it
     // ABOVE the fade gate below, otherwise it would vanish with the menu.
+    // -- Menu Scale + Animation Speed (configured in the About window) --------
+    {
+        ImGuiIO& _io = GetIO();
+        float uiScale;
+        switch (Vars::menuScale) {
+        case 1:  uiScale = 1.00f; break;
+        case 2:  uiScale = 1.25f; break;
+        case 3:  uiScale = 1.50f; break;
+        case 4:  uiScale = 2.00f; break;
+        default: uiScale = ImClamp(_io.DisplaySize.y / 1080.f, 0.85f, 1.75f); break; // Auto
+        }
+        _io.FontGlobalScale = uiScale;
+    }
+    g_menuAnimSpeed = Vars::menuAnimSpeed;
+
     BindSystem::get().process();
     DrawWatermark();
     BindSystem::get().drawBindsOverlay();
     BindSystem::get().drawBindPopup();
     BindSystem::get().drawHotkeysList();
+    DrawAboutWindow();
+
+    // Auto-Save: persist config the moment the menu is closed (if enabled).
+    {
+        static bool s_prevMenuOpen = false;
+        if (s_prevMenuOpen && !Vars::menuOpen && Vars::autoSave)
+            Config::get().save();
+        s_prevMenuOpen = Vars::menuOpen;
+    }
 
     // -- Fade in / out ---------------------------------------------------------
     // m_fade tracks 0..1 independently of menuOpen so we can still render
@@ -190,31 +225,15 @@ void DrawFrameWorkGUI()
             draw->AddText(big, big_size, pos + ImVec2(170 / 2 - nl_size.x / 2, 20), GetColorU32(ImGuiCol_Text), "NEVERHOOK");
         }
 
-        // -- Footer: separator + avatar placeholder + user info
+        // -- Footer: separator + "Info" button (opens the About window)
         draw->AddLine(pos + ImVec2(8, size.y - 50), pos + ImVec2(162, size.y - 50),
             gui.border.to_im_color());
 
-        // Avatar: dark circle with accent ring + first initial
-        {
-            const float  av_cx = pos.x + 30.f;
-            const float  av_cy = pos.y + size.y - 28.f;
-            const float  av_r = 14.f;
-
-            draw->AddCircleFilled(ImVec2(av_cx, av_cy), av_r,
-                ImColor(0.07f, 0.09f, 0.16f, gui.m_fade));
-            draw->AddCircle(ImVec2(av_cx, av_cy), av_r,
-                gui.accent_color.to_im_color(0.45f));
-
-            const char init_str[2] = { 'D', '\0' };
-            const auto init_sz = CalcTextSize(init_str);
-            draw->AddText(ImVec2(av_cx - init_sz.x * 0.5f, av_cy - init_sz.y * 0.5f),
-                GetColorU32(ImGuiCol_Text), init_str);
-        }
-
-        draw->AddText(pos + ImVec2(50, size.y - 40), gui.text.to_im_color(), "demaxihvh");
-        draw->AddText(pos + ImVec2(50, size.y - 25), gui.text_disabled.to_im_color(), "Till: ");
-        draw->AddText(pos + ImVec2(50 + CalcTextSize("Till: ").x, size.y - 25),
-            gui.accent_color.to_im_color(), "Lifetime");
+        SetCursorPos(ImVec2(10, size.y - 42));
+        BeginChild("##infofoot", ImVec2(150, 28));
+        if (gui.tab(ICON_FA_INFO_CIRCLE, "Info", g_aboutOpen))
+            g_aboutOpen = !g_aboutOpen;
+        EndChild();
 
 
         SetCursorPos(ImVec2(10, 70));
@@ -308,6 +327,9 @@ void DrawFrameWorkGUI()
                 gui.toggle("No Death Effect", &Vars::noDeathEffect);
                 gui.toggle("No Respawn Flash", &Vars::noRespawnFlash);
                 gui.toggle("No Pause Button", &Vars::noPauseButton);
+                gui.toggle("Random Seed", &Vars::randomSeed);
+                if (Vars::randomSeed)
+                    gui.slider_int("Seed", &Vars::randomSeedValue, 0, 100000);
 
             } gui.end_group_box();
 
@@ -318,8 +340,11 @@ void DrawFrameWorkGUI()
             gui.group_box(ICON_FA_RUNNING " Global", ImVec2(GetWindowWidth() / 2 - GetStyle().ItemSpacing.x / 2, GetWindowHeight())); {
 
                 gui.toggle("Speedhack", &Vars::speedhack);
-                if (Vars::speedhack)
-                    gui.slider_float("Speed", &Vars::speedhackValue, 0.1f, 5.0f, "%.2fx");
+                if (Vars::speedhack) {
+                    PushItemWidth(-1);
+                    InputFloat("##speed", &Vars::speedhackValue, 0.f, 0.f, "%.2fx");
+                    PopItemWidth();
+                }
                 gui.toggle("Speedhack Audio", &Vars::speedhackAudio);
 
             } gui.end_group_box();
@@ -332,8 +357,10 @@ void DrawFrameWorkGUI()
                     ApplyFPS();
 
                 if (Vars::fpsUnlock) {
-                    if (gui.slider_float("FPS", &Vars::fpsValue, 30.0f, 1000.0f, "%.0f FPS"))
+                    PushItemWidth(-1);
+                    if (InputFloat("##fps", &Vars::fpsValue, 0.f, 0.f, "%.0f FPS"))
                         ApplyFPS();
+                    PopItemWidth();
                 }
 
                 // -- TPS Bypass (custom physics tick rate; user may type ANY value)
@@ -345,14 +372,110 @@ void DrawFrameWorkGUI()
                     PopItemWidth();
                 }
 
-
+                // -- Frame Extrapolation (placed below TPS Bypass)
                 Spacing();
-                // gui.toggle("Compact Lists", &Vars::compactLists);
+                gui.toggle("Frame Extrapolation", &Vars::frameExtrapolation);
+                gui.toggle("Compact List", &Vars::compactList);
             } gui.end_group_box();
 
             break;
 
         case 2:  // Macros
+
+            gui.group_box(ICON_FA_FILM " Macros", ImVec2(GetWindowWidth() / 2 - GetStyle().ItemSpacing.x / 2, GetWindowHeight())); {
+
+                auto& eng = nh::MacroEngine::get();
+
+                static char nameBuf[128] = "";
+                static bool nameInit = false;
+                if (!nameInit) {
+                    std::strncpy(nameBuf, eng.currentName.c_str(), sizeof(nameBuf) - 1);
+                    nameBuf[sizeof(nameBuf) - 1] = '\0';
+                    nameInit = true;
+                }
+
+                // -- Macro name --
+                TextDisabled("Name");
+                PushItemWidth(-1);
+                if (InputText("##macroName", nameBuf, sizeof(nameBuf)))
+                    eng.currentName = nameBuf;
+                PopItemWidth();
+
+                // -- Saved macros dropdown --
+                TextDisabled("Saved macros");
+                PushItemWidth(-1);
+                std::string preview = eng.currentName.empty() ? "(unnamed)" : eng.currentName;
+                if (BeginCombo("##macroList", preview.c_str())) {
+                    auto macros = eng.listMacros();
+                    if (macros.empty())
+                        TextDisabled("  no saved macros");
+                    for (auto& n : macros) {
+                        bool sel = (n == eng.currentName);
+                        if (Selectable(n.c_str(), sel)) {
+                            eng.load(n);
+                            std::strncpy(nameBuf, n.c_str(), sizeof(nameBuf) - 1);
+                            nameBuf[sizeof(nameBuf) - 1] = '\0';
+                            eng.currentName = n;
+                        }
+                        if (sel) SetItemDefaultFocus();
+                    }
+                    EndCombo();
+                }
+                PopItemWidth();
+
+                Spacing();
+                Text("Actions: %s", nh_group_thousands(eng.actionCount()).c_str());
+                Spacing();
+
+                const float half = (GetContentRegionAvail().x - GetStyle().ItemSpacing.x) / 2.f;
+                const bool rec  = eng.isRecording();
+                const bool play = eng.isPlaying();
+
+                // -- Record / Playback --
+                if (gui.button(rec ? "Stop recording" : "Record", ImVec2(half, 0))) {
+                    if (rec) {
+                        eng.stop();
+                        eng.save(eng.currentName);
+                        if (Vars::macroAutoPlayback)
+                            eng.startPlayback();
+                    } else {
+                        eng.startRecording();
+                    }
+                }
+                SameLine();
+                if (gui.button(play ? "Stop playback" : "Playback", ImVec2(half, 0))) {
+                    if (play) eng.stop();
+                    else      eng.startPlayback();
+                }
+
+                // -- Save / Load --
+                if (gui.button("Save", ImVec2(half, 0)))
+                    eng.save(eng.currentName);
+                SameLine();
+                if (gui.button("Load", ImVec2(half, 0)))
+                    eng.load(eng.currentName);
+
+                if (gui.button("Open Macros folder", ImVec2(-1, 0)))
+                    eng.openFolder();
+
+                Spacing();
+                Separator();
+                Spacing();
+
+                // -- Options --
+                TextDisabled("Playback on attempt (0 = instantly)");
+                PushItemWidth(-1);
+                if (InputInt("##macroAttempt", &Vars::macroPlaybackAttempt) &&
+                    Vars::macroPlaybackAttempt < 0)
+                    Vars::macroPlaybackAttempt = 0;
+                PopItemWidth();
+
+                gui.toggle("Ignore player inputs", &Vars::macroIgnoreInputs);
+                gui.toggle("Auto playback after record", &Vars::macroAutoPlayback);
+
+            } gui.end_group_box();
+
+            SameLine();
 
             gui.group_box(ICON_FA_MOUSE " Autoclicker", ImVec2(GetWindowWidth() / 2 - GetStyle().ItemSpacing.x / 2, GetWindowHeight())); {
 
@@ -381,6 +504,13 @@ void DrawFrameWorkGUI()
                 gui.toggle("No Spider Dash", &Vars::noSpiderDash);
                 gui.toggle("No Particles", &Vars::noParticles);
                 gui.toggle("No Trail", &Vars::noTrail);
+                gui.toggle("Hide Player", &Vars::hidePlayer);
+                gui.toggle("Player On Top", &Vars::playerOnTop);
+                gui.toggle("No Robot Fire", &Vars::noRobotFire);
+                gui.toggle("No Swing Fire", &Vars::noSwingFire);
+                gui.toggle("No Ghost Trail", &Vars::noGhostTrail);
+                gui.toggle("No Trail Behind Wave", &Vars::noTrailBehindWave);
+                gui.toggle("No Circle Wave", &Vars::noCircleWave);
 
                 Spacing();
                 gui.toggle("No Wave Pulse", &Vars::noWavePulse);

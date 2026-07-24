@@ -10,12 +10,13 @@ namespace {
     const ccColor3B COL_HAZARD      = { 255, 0,   0   };
     const ccColor3B COL_PASSABLE    = { 0,   255, 255 };
     const ccColor3B COL_INTERACT    = { 0,   255, 0   };
+    const ccColor3B COL_PORTAL      = { 255, 0,   255 };
     const ccColor3B COL_PLAYER      = { 255, 0,   0   };
     const ccColor3B COL_PLAYER_ROT  = { 170, 0,   0   };
 
     const float OUTLINE = 0.35f;
 
-    enum class Kind { Skip, Solid, Hazard, Passable, Interact };
+    enum class Kind { Skip, Solid, Hazard, Passable, Interact, Portal };
 
     bool typeIn(GameObject* o, std::initializer_list<GameObjectType> list) {
         for (auto t : list)
@@ -31,6 +32,13 @@ namespace {
             return Kind::Passable;
         if (typeIn(o, { GameObjectType::Solid, GameObjectType::Slope }))
             return Kind::Solid;
+        if (typeIn(o, {
+                GameObjectType::CubePortal, GameObjectType::ShipPortal, GameObjectType::BallPortal,
+                GameObjectType::UfoPortal, GameObjectType::WavePortal, GameObjectType::RobotPortal,
+                GameObjectType::SpiderPortal, GameObjectType::SwingPortal,
+                GameObjectType::NormalGravityPortal, GameObjectType::InverseGravityPortal,
+                GameObjectType::GravityTogglePortal }))
+            return Kind::Portal;
         if (typeIn(o, {
                 GameObjectType::UserCoin, GameObjectType::Collectible, GameObjectType::SecretCoin,
                 GameObjectType::YellowJumpPad, GameObjectType::PinkJumpPad, GameObjectType::RedJumpPad,
@@ -49,6 +57,7 @@ namespace {
             case Kind::Solid:    return ccc4FFromccc3B(COL_SOLID);
             case Kind::Passable: return ccc4FFromccc3B(COL_PASSABLE);
             case Kind::Interact: return ccc4FFromccc3B(COL_INTERACT);
+            case Kind::Portal:   return ccc4FFromccc3B(COL_PORTAL);
             default:             return ccc4FFromccc3B(ccWHITE);
         }
     }

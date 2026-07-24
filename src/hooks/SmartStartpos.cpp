@@ -30,11 +30,14 @@ namespace {
         }
     }
 
-    GameObject* nhLast(std::vector<GameObject*> const& list, float x) {
+    // Closest object placed before the startpos, with a small buffer so a
+    // portal sitting right on top of the startpos is ignored. Mirrors GDH's
+    // Smart Startpos getClosestObject behaviour.
+    GameObject* nhClosest(std::vector<GameObject*> const& list, float x) {
         GameObject* result = nullptr;
         for (auto o : list) {
-            if (o->m_positionX > x) break;
-            result = o;
+            if (o->m_positionX - 10.f > x) break;
+            if (o->m_positionX - 10.f < x) result = o;
         }
         return result;
     }
@@ -61,7 +64,7 @@ class $modify(NHSmartStartPos, PlayLayer) {
             case 99:  case 101: size.push_back(obj); break;
             case 45:  case 46:  mirror.push_back(obj); break;
             case 286: case 287: dual.push_back(obj); break;
-            case 10:  case 11:  case 2926: gravity.push_back(obj); break;
+            case 9:   case 10:  case 11: gravity.push_back(obj); break;
             default: break;
             }
         }
@@ -79,20 +82,15 @@ class $modify(NHSmartStartPos, PlayLayer) {
             if (!st) continue;
             float x = sp->m_positionX;
 
-            if (auto o = nhLast(speed, x))  st->m_startSpeed = nhStartSpeed(o->m_objectID);
-            if (auto o = nhLast(mode, x))   st->m_startMode = nhStartMode(o->m_objectID);
-            if (auto o = nhLast(size, x))   st->m_startMini = o->m_objectID == 101;
-            if (auto o = nhLast(mirror, x)) st->m_mirrorMode = o->m_objectID == 45;
-            if (auto o = nhLast(dual, x))   st->m_startDual = o->m_objectID == 286;
-
-            bool flipped = false;
-            for (auto o : gravity) {
-                if (o->m_positionX > x) break;
-                if (o->m_objectID == 10) flipped = false;
-                else if (o->m_objectID == 11) flipped = true;
-                else if (o->m_objectID == 2926) flipped = !flipped;
-            }
-            st->m_isFlipped = flipped;
+            if (auto o = nhClosest(speed, x))   st->m_startSpeed = nhStartSpeed(o->m_objectID);
+            if (auto o = nhClosest(mode, x))    st->m_startMode = nhStartMode(o->m_objectID);
+            if (auto o = nhClosest(size, x))    st->m_startMini = o->m_objectID == 101;
+            if (auto o = nhClosest(mirror, x))  st->m_mirrorMode = o->m_objectID == 45;
+            if (auto o = nhClosest(dual, x))    st->m_startDual = o->m_objectID == 286;
+            // Gravity is intentionally left untouched. In 2.2 gravity is very often
+            // set by invisible gravity triggers / orbs / pads that a portal-object
+            // scan cannot see, so guessing gravity from portals is unreliable and
+            // wrongly flips startpos entries. Gravity stays as the startpos/game sets it.
         }
     }
 };

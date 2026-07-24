@@ -10,8 +10,15 @@ using namespace geode::prelude;
 class $modify(NHStartposSwitcher, PlayLayer) {
     struct Fields {
         std::vector<StartPosObject*> spots;
-        int index = 0;
+        int index = 0; // 0 = start of level, 1..count = spots[index - 1]
+        cocos2d::CCLabelBMFont* label = nullptr;
     };
+
+    void nhUpdateLabel() {
+        if (m_fields->label)
+            m_fields->label->setCString(
+                fmt::format("{}/{}", m_fields->index, (int)m_fields->spots.size()).c_str());
+    }
 
     void createObjectsFromSetupFinished() {
         PlayLayer::createObjectsFromSetupFinished();
@@ -23,7 +30,33 @@ class $modify(NHStartposSwitcher, PlayLayer) {
         }
         std::sort(m_fields->spots.begin(), m_fields->spots.end(),
             [](StartPosObject* a, StartPosObject* b) { return a->m_positionX < b->m_positionX; });
+
+        // Sync the index with the startpos the game actually spawned us on, so
+        // the very first Q/E press already switches (no dead first press).
         m_fields->index = 0;
+        if (m_startPosObject) {
+            for (int i = 0; i < (int)m_fields->spots.size(); i++) {
+                if (m_fields->spots[i] == m_startPosObject) {
+                    m_fields->index = i + 1;
+                    break;
+                }
+            }
+        }
+
+        // "current/total" indicator (0 = start of the level).
+        if (Config::get().startposSwitcher && !m_fields->spots.empty() && m_uiLayer) {
+            auto win = cocos2d::CCDirector::sharedDirector()->getWinSize();
+            auto label = cocos2d::CCLabelBMFont::create(
+                fmt::format("{}/{}", m_fields->index, (int)m_fields->spots.size()).c_str(),
+                "bigFont.fnt");
+            label->setScale(0.5f);
+            label->setPosition(win.width / 2.f, 20.f);
+            label->setOpacity(120);
+            label->setZOrder(999);
+            label->setID("nhStartposIndicator"_spr);
+            m_uiLayer->addChild(label);
+            m_fields->label = label;
+        }
     }
 
     void nhSwitchStartpos(int delta) {
@@ -36,14 +69,20 @@ class $modify(NHStartposSwitcher, PlayLayer) {
         if (next > count) next = 0;
         m_fields->index = next;
 
+        m_isTestMode = (next != 0);
         m_currentCheckpoint = nullptr;
         setStartPosObject(next == 0 ? nullptr : spots[next - 1]);
 
+        // One reset only. Previously practice ran resetLevelFromStart() *and*
+        // resetLevel() back to back -- two full level resets, which doubled the
+        // switch cost on big / object-heavy levels. Each mode needs just one.
         if (m_isPracticeMode)
             resetLevelFromStart();
-
-        PlayLayer::resetLevel();
+        else
+            PlayLayer::resetLevel();
         startMusic();
+
+        nhUpdateLabel();
     }
 };
 

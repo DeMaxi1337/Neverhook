@@ -817,8 +817,9 @@ public:
         registerValued("Speedhack", &Vars::speedhack, &Vars::speedhackValue, 0.1f, 5.0f);
         registerBool("Speedhack Audio", &Vars::speedhackAudio);
         registerValued("FPS Bypass", &Vars::fpsUnlock, &Vars::fpsValue, 30.0f, 1000.0f);
+        registerBool("Frame Extrapolation", &Vars::frameExtrapolation);
         registerValued("TPS Bypass", &Vars::tpsBypass, &Vars::tpsValue, 1.0f, 10000.0f);
-        // registerBool("Compact Lists", &Vars::compactLists);
+        registerBool("Compact List", &Vars::compactList);
         registerValued("Player 1", &Vars::autoclicker, &Vars::autoclickerCps, 1.0f, 30.0f);
         registerValued("Player 2", &Vars::autoclickerP2, &Vars::autoclickerP2Cps, 1.0f, 30.0f);
         registerBool("Hide Attempts", &Vars::hideAttempts);
@@ -829,6 +830,14 @@ public:
         registerBool("No Spider Dash", &Vars::noSpiderDash);
         registerBool("No Particles", &Vars::noParticles);
         registerBool("No Trail", &Vars::noTrail);
+        registerBool("Hide Player", &Vars::hidePlayer);
+        registerBool("Player On Top", &Vars::playerOnTop);
+        registerBool("No Robot Fire", &Vars::noRobotFire);
+        registerBool("No Swing Fire", &Vars::noSwingFire);
+        registerBool("No Ghost Trail", &Vars::noGhostTrail);
+        registerBool("No Trail Behind Wave", &Vars::noTrailBehindWave);
+        registerBool("No Circle Wave", &Vars::noCircleWave);
+        registerBool("Random Seed", &Vars::randomSeed);
         registerBool("No Wave Pulse", &Vars::noWavePulse);
         registerBool("No Wave Trail", &Vars::noWaveTrail);
         registerBool("Solid Wave Trail", &Vars::solidWaveTrail);

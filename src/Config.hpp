@@ -26,6 +26,7 @@ struct Config {
     float speedhackValue  = 1.0f;
     bool  fpsUnlock       = false;
     float fpsValue        = 240.0f;
+    bool  frameExtrapolation = false;
     bool  verifyHack      = false;
     bool  copyHack        = false;
 
@@ -41,7 +42,7 @@ struct Config {
 
     bool  tpsBypass             = false;
     float tpsValue              = 240.0f;
-    // bool  compactLists          = false;
+    bool  compactList           = false;
 
     bool  noMirrorPortal        = false;
     bool  smartStartpos         = true;
@@ -88,6 +89,11 @@ struct Config {
     float autoclickerCps   = 10.0f;
     float autoclickerP2Cps = 10.0f;
 
+    // --- Macros ---
+    int   macroPlaybackAttempt   = 0;      // playback on this attempt (0 = instantly)
+    bool  macroIgnoreInputs      = false;  // drop human inputs during playback
+    bool  macroAutoPlayback      = false;  // auto-start playback after recording
+
     bool  noTransition   = false;
     bool  noPauseButton  = false;
     bool  speedhackAudio = false;
@@ -119,6 +125,22 @@ struct Config {
     bool  kbBackground     = true;
     float keybindsX        = 0.012f;
     float keybindsY        = 0.045f;
+
+    // --- Mega Hack additions (batch) ---
+    bool  hidePlayer        = false;
+    bool  playerOnTop       = false;
+    bool  noRobotFire       = false;
+    bool  noSwingFire       = false;
+    bool  noGhostTrail      = false;
+    bool  noTrailBehindWave = false;
+    bool  noCircleWave      = false;
+    bool  randomSeed        = false;
+    int   randomSeedValue   = 0;
+
+    // --- About window ---
+    bool  autoSave         = false;
+    int   menuScale        = 0;      // 0=Auto, 1=100%, 2=125%, 3=150%, 4=200%
+    float menuAnimSpeed    = 1.0f;
 
     // --- Ported level / bypass functions ---
     bool  noShader = false;

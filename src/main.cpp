@@ -31,6 +31,7 @@ void Config::load() {
     speedhackValue = (float)m->getSavedValue<double>("speedhackValue", 1.0);
     fpsUnlock      = m->getSavedValue<bool>("fpsUnlock", false);
     fpsValue       = (float)m->getSavedValue<double>("fpsValue", 240.0);
+    frameExtrapolation = m->getSavedValue<bool>("frameExtrapolation", false);
     verifyHack     = m->getSavedValue<bool>("verifyHack", false);
     copyHack       = m->getSavedValue<bool>("copyHack", false);
     hideAttempts          = m->getSavedValue<bool>("hideAttempts", false);
@@ -56,7 +57,7 @@ void Config::load() {
     unlockVaults = m->getSavedValue<bool>("unlockVaults", false);
     tpsBypass             = m->getSavedValue<bool>("tpsBypass", false);
     tpsValue              = (float)m->getSavedValue<double>("tpsValue", 240.0);
-    // compactLists          = m->getSavedValue<bool>("compactLists", false);
+    compactList           = m->getSavedValue<bool>("compactList", false);
     noMirrorPortal        = m->getSavedValue<bool>("noMirrorPortal", false);
     smartStartpos         = m->getSavedValue<bool>("smartStartpos", true);
     startposSwitcher      = m->getSavedValue<bool>("startposSwitcher", false);
@@ -78,6 +79,15 @@ void Config::load() {
     waveTrailSizeValue = (float)m->getSavedValue<double>("waveTrailSizeValue", 1.0);
     noParticles       = m->getSavedValue<bool>("noParticles", false);
     noTrail           = m->getSavedValue<bool>("noTrail", false);
+    hidePlayer        = m->getSavedValue<bool>("hidePlayer", false);
+    playerOnTop       = m->getSavedValue<bool>("playerOnTop", false);
+    noRobotFire       = m->getSavedValue<bool>("noRobotFire", false);
+    noSwingFire       = m->getSavedValue<bool>("noSwingFire", false);
+    noGhostTrail      = m->getSavedValue<bool>("noGhostTrail", false);
+    noTrailBehindWave = m->getSavedValue<bool>("noTrailBehindWave", false);
+    noCircleWave      = m->getSavedValue<bool>("noCircleWave", false);
+    randomSeed        = m->getSavedValue<bool>("randomSeed", false);
+    randomSeedValue   = m->getSavedValue<int>("randomSeedValue", 0);
 
     hideEditorUI       = m->getSavedValue<bool>("hideEditorUI", false);
     levelEdit          = m->getSavedValue<bool>("levelEdit", false);
@@ -97,6 +107,9 @@ void Config::load() {
     autoclickerP2    = m->getSavedValue<bool>("autoclickerP2", false);
     autoclickerCps   = (float)m->getSavedValue<double>("autoclickerCps", 10.0);
     autoclickerP2Cps = (float)m->getSavedValue<double>("autoclickerP2Cps", 10.0);
+    macroPlaybackAttempt = m->getSavedValue<int>("macroPlaybackAttempt", 0);
+    macroIgnoreInputs    = m->getSavedValue<bool>("macroIgnoreInputs", false);
+    macroAutoPlayback    = m->getSavedValue<bool>("macroAutoPlayback", false);
 
     noTransition   = m->getSavedValue<bool>("noTransition",   false);
     noPauseButton  = m->getSavedValue<bool>("noPauseButton",  false);
@@ -135,6 +148,10 @@ void Config::load() {
     kbBackground    = m->getSavedValue<bool>("kbBackground",  true);
     keybindsX       = (float)m->getSavedValue<double>("keybindsX", 0.012);
     keybindsY       = (float)m->getSavedValue<double>("keybindsY", 0.045);
+
+    autoSave      = m->getSavedValue<bool>("autoSave", false);
+    menuScale     = m->getSavedValue<int>("menuScale", 0);
+    menuAnimSpeed = (float)m->getSavedValue<double>("menuAnimSpeed", 1.0);
 }
 
 void Config::save() {
@@ -157,6 +174,7 @@ void Config::save() {
     m->setSavedValue("speedhackValue", (double)speedhackValue);
     m->setSavedValue("fpsUnlock", fpsUnlock);
     m->setSavedValue("fpsValue", (double)fpsValue);
+    m->setSavedValue("frameExtrapolation", frameExtrapolation);
     m->setSavedValue("verifyHack", verifyHack);
     m->setSavedValue("copyHack", copyHack);
     m->setSavedValue("hideAttempts", hideAttempts);
@@ -182,7 +200,7 @@ void Config::save() {
     m->setSavedValue("unlockVaults", unlockVaults);
     m->setSavedValue("tpsBypass", tpsBypass);
     m->setSavedValue("tpsValue", (double)tpsValue);
-    // m->setSavedValue("compactLists", compactLists);
+    m->setSavedValue("compactList", compactList);
     m->setSavedValue("noMirrorPortal", noMirrorPortal);
     m->setSavedValue("smartStartpos", smartStartpos);
     m->setSavedValue("startposSwitcher", startposSwitcher);
@@ -204,6 +222,15 @@ void Config::save() {
     m->setSavedValue("waveTrailSizeValue", (double)waveTrailSizeValue);
     m->setSavedValue("noParticles", noParticles);
     m->setSavedValue("noTrail", noTrail);
+    m->setSavedValue("hidePlayer", hidePlayer);
+    m->setSavedValue("playerOnTop", playerOnTop);
+    m->setSavedValue("noRobotFire", noRobotFire);
+    m->setSavedValue("noSwingFire", noSwingFire);
+    m->setSavedValue("noGhostTrail", noGhostTrail);
+    m->setSavedValue("noTrailBehindWave", noTrailBehindWave);
+    m->setSavedValue("noCircleWave", noCircleWave);
+    m->setSavedValue("randomSeed", randomSeed);
+    m->setSavedValue("randomSeedValue", randomSeedValue);
 
     m->setSavedValue("hideEditorUI", hideEditorUI);
     m->setSavedValue("levelEdit", levelEdit);
@@ -223,6 +250,9 @@ void Config::save() {
     m->setSavedValue("autoclickerP2", autoclickerP2);
     m->setSavedValue("autoclickerCps", (double)autoclickerCps);
     m->setSavedValue("autoclickerP2Cps", (double)autoclickerP2Cps);
+    m->setSavedValue("macroPlaybackAttempt", macroPlaybackAttempt);
+    m->setSavedValue("macroIgnoreInputs", macroIgnoreInputs);
+    m->setSavedValue("macroAutoPlayback", macroAutoPlayback);
 
     m->setSavedValue("noTransition",   noTransition);
     m->setSavedValue("noPauseButton",  noPauseButton);
@@ -261,11 +291,16 @@ void Config::save() {
     m->setSavedValue("kbBackground",  kbBackground);
     m->setSavedValue("keybindsX",     (double)keybindsX);
     m->setSavedValue("keybindsY",     (double)keybindsY);
+
+    m->setSavedValue("autoSave", autoSave);
+    m->setSavedValue("menuScale", menuScale);
+    m->setSavedValue("menuAnimSpeed", (double)menuAnimSpeed);
 }
 
 void applyFPS() {
     auto& c = Config::get();
-    double fps = std::clamp((double)c.fpsValue, 30.0, 1000.0);
+    double fps = (double)c.fpsValue;
+    if (fps < 1.0) fps = 1.0; // guard against non-positive interval; no upper cap, any custom FPS allowed
     double interval = c.fpsUnlock ? (1.0 / fps) : (1.0 / 60.0);
     if (auto app = CCApplication::sharedApplication()) {
         app->setAnimationInterval(interval);

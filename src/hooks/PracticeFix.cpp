@@ -1,8 +1,15 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/PlayLayer.hpp>
 #include "../Config.hpp"
+#include "MacroEngine.hpp"
 
 using namespace geode::prelude;
+
+// Practice fix is active when the user enabled it OR while a macro is being
+// recorded, so checkpoint restores stay frame-accurate during recording.
+static bool nhPracticeFixActive() {
+    return Config::get().practiceFix || nh::MacroEngine::get().isRecording();
+}
 
 struct NHPlayerSnap {
     cocos2d::CCPoint pos;
@@ -55,7 +62,7 @@ class $modify(NHPracticeFix, PlayLayer) {
 
     CheckpointObject* createCheckpoint() {
         auto cp = PlayLayer::createCheckpoint();
-        if (!cp || !Config::get().practiceFix)
+        if (!cp || !nhPracticeFixActive())
             return cp;
         if (m_gameState.m_currentProgress <= 0)
             return cp;
@@ -71,7 +78,7 @@ class $modify(NHPracticeFix, PlayLayer) {
 
     void loadFromCheckpoint(CheckpointObject* cp) {
         PlayLayer::loadFromCheckpoint(cp);
-        if (!Config::get().practiceFix)
+        if (!nhPracticeFixActive())
             return;
         auto it = m_fields->snaps.find(cp);
         if (it == m_fields->snaps.end())

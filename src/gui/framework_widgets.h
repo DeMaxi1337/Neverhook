@@ -16,9 +16,13 @@
 #include <functional>
 
 
+// Global multiplier for every menu tween. Set from the About window's
+// "Animation Speed" control each frame (1.0 = default speed).
+inline float g_menuAnimSpeed = 1.f;
+
 static inline float fi_lerp( float current, float target, float alpha_60 ) {
 
-    const float dt = ImGui::GetIO( ).DeltaTime;
+    const float dt = ImGui::GetIO( ).DeltaTime * g_menuAnimSpeed;
     if ( dt <= 0.f )
         return current;
 
