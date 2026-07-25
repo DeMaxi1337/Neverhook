@@ -7,7 +7,6 @@
 using namespace geode::prelude;
 
 namespace {
-    // File magic so we don't try to parse junk files as macros.
     constexpr char kMagic[4] = { 'N', 'H', 'M', '1' };
 }
 
@@ -20,7 +19,7 @@ MacroEngine& MacroEngine::get() {
 
 void MacroEngine::startRecording() {
     inputs.clear();
-    inputs.reserve(8192);  // pre-grow once so mid-run push_back never reallocs
+    inputs.reserve(8192);
     playbackIndex = 0;
     started = false;
     pendingRewind = false;
@@ -29,7 +28,7 @@ void MacroEngine::startRecording() {
 
 void MacroEngine::startPlayback() {
     playbackIndex = 0;
-    started = false;  // decided by the attempt gate in the hook
+    started = false;
     state = MacroState::Playing;
 }
 
@@ -40,14 +39,8 @@ void MacroEngine::stop() {
 
 void MacroEngine::onLevelReset() {
     if (state == MacroState::Recording) {
-        // Do NOT wipe the whole recording here. On a full restart the next tick
-        // is at frame 0, so recordTick drops everything anyway; but on a
-        // practice checkpoint respawn we must keep every input BEFORE the
-        // checkpoint and only re-record the part after it. recordTick handles
-        // both once it sees the frame we rewound to.
         pendingRewind = true;
     } else if (state == MacroState::Playing) {
-        // Rewind to the first input; the attempt gate re-decides `started`.
         playbackIndex = 0;
         started = false;
     }
@@ -64,14 +57,8 @@ void MacroEngine::recordTick(uint32_t frame) {
     if (!pendingRewind) return;
     pendingRewind = false;
 
-    // We just reset / respawned to `frame`. Drop everything recorded at or
-    // after it so this pass re-records cleanly from here. Inputs are stored in
-    // ascending frame order and MacroInput is trivially destructible, so we do
-    // one binary search + a single truncation instead of popping element by
-    // element. That keeps a full restart (frame 0 -> whole buffer) from
-    // stalling a frame, which is what caused the post-death hitch.
     if (frame == 0) {
-        inputs.clear();  // keeps capacity; no realloc next attempt
+        inputs.clear();
         return;
     }
     auto cut = std::lower_bound(
@@ -80,13 +67,7 @@ void MacroEngine::recordTick(uint32_t frame) {
     inputs.erase(cut, inputs.end());
 }
 
-// -----------------------------------------------------------------------------
-// Persistence
-// -----------------------------------------------------------------------------
-
 std::filesystem::path MacroEngine::macrosDir() {
-    // Pure path, no I/O -- this is called from the render loop, so it must be
-    // cheap. Directory creation happens lazily in save().
     return Mod::get()->getConfigDir() / "macros";
 }
 
@@ -182,4 +163,4 @@ void MacroEngine::openFolder() {
     (void)geode::utils::file::openFolder(macrosDir());
 }
 
-} // namespace nh
+}
