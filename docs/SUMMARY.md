@@ -24,6 +24,7 @@
 * [utils](api/utils.md)
 * [imgui](api/imgui.md)
 * [The game's own UI](api/nodes.md)
+* [Game classes](api/classes.md)
 * [world](api/world.md)
 * [Files and libraries](api/files.md)
 * [net](api/net.md)
@@ -37,4 +38,3 @@
 * [Auto safe mode on death](examples/auto-safe-mode.md)
 * [Object scanner](examples/object-scanner.md)
 * [A styled control panel](examples/styled-panel.md)
-* [A floating companion](examples/companion.md)
