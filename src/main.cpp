@@ -5,12 +5,6 @@
 
 using namespace geode::prelude;
 
-static const char* kKeys[] = {
-    "noclip", "noDeathEffect", "noRespawnFlash", "practiceMusic",
-    "iconBypass", "speedhack", "speedhackValue", "fpsUnlock",
-    "fpsValue", "verifyHack"
-};
-
 void Config::load() {
     auto m = Mod::get();
     noclip         = m->getSavedValue<bool>("noclip", false);
@@ -26,6 +20,7 @@ void Config::load() {
     noDeathEffect  = m->getSavedValue<bool>("noDeathEffect", false);
     noRespawnFlash = m->getSavedValue<bool>("noRespawnFlash", false);
     practiceMusic  = m->getSavedValue<bool>("practiceMusic", false);
+    practiceFix    = m->getSavedValue<bool>("practiceFix", false);
     iconBypass     = m->getSavedValue<bool>("iconBypass", false);
     speedhack      = m->getSavedValue<bool>("speedhack", false);
     speedhackValue = (float)m->getSavedValue<double>("speedhackValue", 1.0);
@@ -43,6 +38,7 @@ void Config::load() {
     showHitboxes          = m->getSavedValue<bool>("showHitboxes", false);
     showHitboxesOnDeath   = m->getSavedValue<bool>("showHitboxesOnDeath", false);
     showTrajectory        = m->getSavedValue<bool>("showTrajectory", false);
+    clickBetweenFrames    = m->getSavedValue<bool>("clickBetweenFrames", false);
     noShader = m->getSavedValue<bool>("noShader", false);
     noPortalLightning = m->getSavedValue<bool>("noPortalLightning", false);
     hideLevelCompleteVfx = m->getSavedValue<bool>("hideLevelCompleteVfx", false);
@@ -62,6 +58,10 @@ void Config::load() {
     smartStartpos         = m->getSavedValue<bool>("smartStartpos", true);
     startposSwitcher      = m->getSavedValue<bool>("startposSwitcher", false);
     frameAdvance          = m->getSavedValue<bool>("frameAdvance", false);
+    faStepKey             = m->getSavedValue<int>("faStepKey", 67);
+    faHold                = m->getSavedValue<bool>("faHold", false);
+    faHoldDelayCfg        = (float)m->getSavedValue<double>("faHoldDelayCfg", 0.25);
+    faHoldSpeedCfg        = m->getSavedValue<int>("faHoldSpeedCfg", 5);
     instantComplete       = m->getSavedValue<bool>("instantComplete", false);
     instantRestart        = m->getSavedValue<bool>("instantRestart", false);
     customRespawn         = m->getSavedValue<bool>("customRespawn", false);
@@ -169,6 +169,7 @@ void Config::save() {
     m->setSavedValue("noDeathEffect", noDeathEffect);
     m->setSavedValue("noRespawnFlash", noRespawnFlash);
     m->setSavedValue("practiceMusic", practiceMusic);
+    m->setSavedValue("practiceFix", practiceFix);
     m->setSavedValue("iconBypass", iconBypass);
     m->setSavedValue("speedhack", speedhack);
     m->setSavedValue("speedhackValue", (double)speedhackValue);
@@ -186,6 +187,7 @@ void Config::save() {
     m->setSavedValue("showHitboxes", showHitboxes);
     m->setSavedValue("showHitboxesOnDeath", showHitboxesOnDeath);
     m->setSavedValue("showTrajectory", showTrajectory);
+    m->setSavedValue("clickBetweenFrames", clickBetweenFrames);
     m->setSavedValue("noShader", noShader);
     m->setSavedValue("noPortalLightning", noPortalLightning);
     m->setSavedValue("hideLevelCompleteVfx", hideLevelCompleteVfx);
@@ -205,6 +207,10 @@ void Config::save() {
     m->setSavedValue("smartStartpos", smartStartpos);
     m->setSavedValue("startposSwitcher", startposSwitcher);
     m->setSavedValue("frameAdvance", frameAdvance);
+    m->setSavedValue("faStepKey", faStepKey);
+    m->setSavedValue("faHold", faHold);
+    m->setSavedValue("faHoldDelayCfg", (double)faHoldDelayCfg);
+    m->setSavedValue("faHoldSpeedCfg", faHoldSpeedCfg);
     m->setSavedValue("instantComplete", instantComplete);
     m->setSavedValue("instantRestart", instantRestart);
     m->setSavedValue("customRespawn", customRespawn);
@@ -300,7 +306,7 @@ void Config::save() {
 void applyFPS() {
     auto& c = Config::get();
     double fps = (double)c.fpsValue;
-    if (fps < 1.0) fps = 1.0; // guard against non-positive interval; no upper cap, any custom FPS allowed
+    if (fps < 1.0) fps = 1.0;
     double interval = c.fpsUnlock ? (1.0 / fps) : (1.0 / 60.0);
     if (auto app = CCApplication::sharedApplication()) {
         app->setAnimationInterval(interval);
@@ -315,7 +321,6 @@ $on_mod(Loaded) {
     log::info("Neverhook loaded - press INSERT in game to open the menu");
 }
 
-// Geode 5.x has no $on_mod(Unloaded); autosave on every scene switch instead.
 class $modify(NHDirectorSave, CCDirector) {
     void willSwitchToScene(CCScene* scene) {
         CCDirector::willSwitchToScene(scene);

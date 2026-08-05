@@ -4,7 +4,6 @@
 
 using namespace geode::prelude;
 
-// No Dash Fire / Wave Trail Size / No Trail / No Spider Dash.
 class $modify(NHCosmeticPlayer, PlayerObject) {
     void update(float dt) {
         PlayerObject::update(dt);

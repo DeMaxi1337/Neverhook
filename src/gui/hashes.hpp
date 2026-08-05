@@ -1,9 +1,5 @@
 #pragma once
 
-//#define FONT_ICON_FILE_NAME_FAL "fa-light-300.ttf"
-//#define FONT_ICON_FILE_NAME_FAR "fa-regular-400.ttf"
-//#define FONT_ICON_FILE_NAME_FAS "fa-solid-900.ttf"
-
 #define ICON_MIN_FA 0xf000
 #define ICON_MAX_FA 0xf976
 #define ICON_FA_ABACUS "\uf640"

@@ -5,10 +5,6 @@
 
 using namespace geode::prelude;
 
-// Icon Bypass only removes the ownership gate so any icon, color or glow item
-// can be selected and shown. It does NOT force glow rendering: the player's
-// glow is drawn natively by the game according to the garage Glow checkbox.
-// (Glow was previously being hidden by the No Glow feature, not by unlocking.)
 class $modify(NHGameManager, GameManager) {
     bool isIconUnlocked(int key, IconType type) {
         if (GameManager::isIconUnlocked(key, type)) return true;

@@ -5,8 +5,6 @@
 
 using namespace geode::prelude;
 
-// Practice fix is active when the user enabled it OR while a macro is being
-// recorded, so checkpoint restores stay frame-accurate during recording.
 static bool nhPracticeFixActive() {
     return Config::get().practiceFix || nh::MacroEngine::get().isRecording();
 }

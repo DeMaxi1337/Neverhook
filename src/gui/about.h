@@ -9,20 +9,15 @@
 #include "imgui_internal.h"
 #include "hashes.hpp"
 #include "vars.h"
-#include "watermark.h"   // wm_combo() + WM_GEAR
+#include "watermark.h"
 
 #include <Geode/utils/web.hpp>
 
 using namespace ImGui;
 
-// Opened by the sidebar "Info" button (replaces the old user/license footer).
 inline bool  g_aboutOpen = false;
 inline float g_aboutAnim = 0.f;
 
-// -----------------------------------------------------------------------------
-// DrawAboutWindow -- Neverlose-style "About" panel. Drawn every frame from the
-// always-on overlay section so it works independently of the main menu's fade.
-// -----------------------------------------------------------------------------
 inline void DrawAboutWindow()
 {
     g_aboutAnim = fi_lerp( g_aboutAnim, g_aboutOpen ? 1.f : 0.f, 0.30f );
@@ -49,12 +44,10 @@ inline void DrawAboutWindow()
         const ImVec2 pos    = window->Pos;
         const ImVec2 size   = window->Size;
 
-        // -- Background + hairline border
         draw->AddRectFilled( pos, pos + size,
             ImColor( 0.019f, 0.035f, 0.062f, g_aboutAnim ), 6.f );
         draw->AddRect( pos, pos + size, gui.border.to_im_color(), 6.f );
 
-        // -- Title bar: gear icon + "About Neverhook" + close (X)
         const float bar_h = 34.f;
         draw->AddText( ImVec2( pos.x + 12.f, pos.y + 9.f ),
             gui.text_disabled.to_im_color(), WM_GEAR );
@@ -78,7 +71,6 @@ inline void DrawAboutWindow()
         draw->AddLine( ImVec2( pos.x, pos.y + bar_h ),
             ImVec2( pos.x + size.x, pos.y + bar_h ), gui.border.to_im_color() );
 
-        // -- Big NEVERHOOK logo (same display font as the sidebar)
         float y = bar_h + 16.f;
         if ( io.Fonts->Fonts.Size > 1 )
         {
@@ -96,7 +88,6 @@ inline void DrawAboutWindow()
             y += 24.f;
         }
 
-        // -- Body (normal ImGui layout inside a padded child)
         SetCursorPos( ImVec2( 16.f, y ) );
         PushStyleVar( ImGuiStyleVar_ItemSpacing, ImVec2( 8, 8 ) );
         BeginChild( "##aboutbody", ImVec2( size.x - 32.f, size.y - y - 14.f ) );
@@ -140,9 +131,9 @@ inline void DrawAboutWindow()
         gui.slider_float( "Animation Speed", &Vars::menuAnimSpeed, 0.25f, 3.0f, "%.2f" );
 
         EndChild();
-        PopStyleVar();   // ItemSpacing
+        PopStyleVar();
     }
     End();
 
-    PopStyleVar( 2 );    // WindowPadding + Alpha
+    PopStyleVar( 2 );
 }

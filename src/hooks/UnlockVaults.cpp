@@ -11,11 +11,6 @@
 
 using namespace geode::prelude;
 
-// Opens the secret vaults (Vault, Treasure Room, Vault of Secrets, Chamber of
-// Time) by spoofing the specific unlock/stat checks the doors perform. The
-// static flags arm a single bypassed check right before each door opens so
-// unrelated lookups are unaffected.
-
 namespace {
     bool s_bypassUGV = false;
     bool s_bypassUGV2 = false;
@@ -66,7 +61,7 @@ class $modify(NHUnlockVaultsCL, CreatorLayer) {
     void onSecretVault(cocos2d::CCObject* sender) {
         if (vaultsOn()) {
             s_bypassGameStat = true;
-            s_bypassGameStatValue = 51; // key 13 > 50
+            s_bypassGameStatValue = 51;
         }
         CreatorLayer::onSecretVault(sender);
     }
@@ -80,7 +75,7 @@ class $modify(NHUnlockVaultsCL, CreatorLayer) {
         if (vaultsOn()) {
             s_bypassUGV = true;
             s_bypassGameStat = true;
-            s_bypassGameStatValue = 51; // key 13 > 50
+            s_bypassGameStatValue = 51;
         }
         return CreatorLayer::init();
     }
@@ -90,7 +85,7 @@ class $modify(NHUnlockVaultsOL, OptionsLayer) {
     void onSecretVault(cocos2d::CCObject* sender) {
         if (vaultsOn()) {
             s_bypassGameStat = true;
-            s_bypassGameStatValue = 11; // key 12 > 10
+            s_bypassGameStatValue = 11;
         }
         OptionsLayer::onSecretVault(sender);
     }

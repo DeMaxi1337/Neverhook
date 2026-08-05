@@ -5,7 +5,6 @@
 
 using namespace geode::prelude;
 
-// Slider Limit Bypass -- lets editor sliders move past their normal bounds.
 class $modify(NHSliderLimitBypass, SliderTouchLogic) {
     void ccTouchMoved(cocos2d::CCTouch* touch, cocos2d::CCEvent* event) {
         if (!Config::get().sliderLimitBypass) {

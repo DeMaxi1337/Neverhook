@@ -1,0 +1,7 @@
+# GitBook reads the docs out of the docs/ folder of this repo, so the mod and its
+# documentation stay in one place and one commit.
+root: ./docs/
+
+structure:
+  readme: README.md
+  summary: SUMMARY.md

@@ -42,7 +42,47 @@ set(HAS_IMGUI ON)
 # 2) cocos/Geode backend -- the prevter fork (NOT matcool), pinned like EclipseMenu
 CPMAddPackage("gh:prevter/gd-imgui-cocos#e66d02b")
 
-target_link_libraries(${PROJECT_NAME} imgui imgui-cocos)
+# -- LuaJIT ------------------------------------------------------------
+# LuaJIT ships a Makefile build only, so the sources are fetched plain and
+# driven by the community CMake wrapper, which handles the host buildvm
+# step for every platform this mod targets.
+CPMAddPackage(
+    NAME luajit_src
+    GITHUB_REPOSITORY LuaJIT/LuaJIT
+    GIT_TAG v2.1
+    DOWNLOAD_ONLY YES
+)
+
+CPMAddPackage(
+    NAME luajit_cmake
+    GITHUB_REPOSITORY zhaozg/luajit-cmake
+    GIT_TAG master
+    DOWNLOAD_ONLY YES
+)
+
+set(LUAJIT_DIR "${luajit_src_SOURCE_DIR}" CACHE PATH "LuaJIT sources" FORCE)
+set(LUAJIT_BUILD_EXE OFF CACHE BOOL "" FORCE)
+set(LUA_BUILD_AS_DLL OFF CACHE BOOL "" FORCE)
+add_subdirectory(${luajit_cmake_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/luajit)
+
+# Keep our own copy of the path: the wrapper writes to LUAJIT_DIR as well,
+# and after add_subdirectory it no longer points at the LuaJIT sources --
+# which is why lua.h went missing.
+set(NH_LUAJIT_INCLUDE "${luajit_src_SOURCE_DIR}/src")
+
+if (NOT EXISTS "${NH_LUAJIT_INCLUDE}/lua.h")
+    message(FATAL_ERROR "lua.h not found in ${NH_LUAJIT_INCLUDE} -- "
+                        "delete build/_deps and reconfigure")
+endif()
+
+target_link_libraries(${PROJECT_NAME} imgui imgui-cocos libluajit)
+
+# ${CMAKE_CURRENT_BINARY_DIR}/luajit holds luajit.h, generated during the
+# wrapper's build step.
+target_include_directories(${PROJECT_NAME} PRIVATE
+    "${NH_LUAJIT_INCLUDE}"
+    "${CMAKE_CURRENT_BINARY_DIR}/luajit"
+)
 
 # Ensure icon string bytes stay UTF-8 (icons in hashes.hpp are plain narrow
 # literals after stripping the u8 prefix; Geode itself needs char8_t enabled).

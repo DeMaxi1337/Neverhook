@@ -39,7 +39,6 @@ bool c_gui::tab( const char* icon, const char* label, bool selected ) {
 
     draw->AddRectFilled( bb.Min, bb.Max, gui.accent_color.to_im_color( 0.32f * value->second ), 5 );
 
-    // Left-edge accent stripe: fades in/out with the selection state
     if ( value->second > 0.005f ) {
         const float  bar_half_h = 8.f * value->second;
         const ImVec2 bar_min( bb.Min.x,        bb.GetCenter( ).y - bar_half_h );
@@ -99,11 +98,10 @@ void c_gui::group_box( const char* name, ImVec2 size_arg ) {
                                          ImColor( 0.f, 0.f, 0.f, 0.28f * gui.m_fade ), 6 );
     GetWindowDrawList( )->AddRectFilled( pos + ImVec2( 0, 20 ), pos + size_arg, gui.group_box_bg.to_im_color( ), 6 );
     GetWindowDrawList( )->AddRect( pos + ImVec2( 0, 20 ), pos + size_arg, gui.border.to_im_color( 2.5f ), 6 );
-    // Top-edge inner highlight for perceived depth (thin bright line on top of panel)
+
     GetWindowDrawList( )->AddLine( pos + ImVec2( 7, 21 ), pos + ImVec2( size_arg.x - 7, 21 ),
                                    ImColor( 1.f, 1.f, 1.f, 0.055f * gui.m_fade ) );
 
-    // Accent bullet bar to the left of the group title text
     {
         const auto  title_sz = CalcTextSize( name );
         const float bar_y0   = ( title_sz.y - 8.f ) * 0.5f;
@@ -115,13 +113,13 @@ void c_gui::group_box( const char* name, ImVec2 size_arg ) {
 
     SetCursorPos( ImVec2( 12, 21 ) );
     PushStyleVar( ImGuiStyleVar_WindowPadding, { 0, 10 } );
-    // ImGuiWindowFlags_AlwaysUseWindowPadding moved into ImGuiChildFlags in ImGui 1.90.
+
     BeginChild( name, { size_arg.x - 24, size_arg.y - 21 }, ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoScrollbar );
 
     BeginGroup( );
 
     PushStyleVar( ImGuiStyleVar_ItemSpacing, { 8, 7 } );
-    PushStyleVar( ImGuiStyleVar_Alpha, gui.m_anim * gui.m_fade );  // multiply: Push replaces, not multiplies
+    PushStyleVar( ImGuiStyleVar_Alpha, gui.m_anim * gui.m_fade );
 }
 
 void c_gui::end_group_box( ) {
@@ -132,13 +130,6 @@ void c_gui::end_group_box( ) {
     EndChild( );
 }
 
-// -----------------------------------------------------------------------------
-// toggle -- Neverlose-style pill replacement for Checkbox.
-//
-// Layout: [label                                                  [pill+knob]]
-// The whole row is one clickable rect, so users can hit the label or the pill.
-// All animations use fi_lerp -> framerate independent.
-// -----------------------------------------------------------------------------
 bool c_gui::toggle( const char* label, bool* v ) {
 
     auto window = GetCurrentWindow( );
@@ -151,8 +142,8 @@ bool c_gui::toggle( const char* label, bool* v ) {
 
     const auto label_size = CalcTextSize( label, 0, true );
 
-    const float pill_w = 30.f;  // +15% vs original
-    const float pill_h = 16.f;  // +14% vs original
+    const float pill_w = 30.f;
+    const float pill_h = 16.f;
     const float row_w  = GetContentRegionAvail( ).x;
     const float row_h  = ImMax( label_size.y, pill_h );
 
@@ -171,7 +162,6 @@ bool c_gui::toggle( const char* label, bool* v ) {
         BindSystem::get( ).openPopup( label );
     }
 
-    // -- on/off transition ----------------------------------------------------
     static std::unordered_map< ImGuiID, float > anims;
     auto it = anims.find( id );
     if ( it == anims.end( ) )
@@ -179,22 +169,19 @@ bool c_gui::toggle( const char* label, bool* v ) {
     it->second = fi_lerp( it->second, *v ? 1.f : 0.f, 0.18f );
     const float a = it->second;
 
-    // -- pill (right-aligned) -------------------------------------------------
     const ImVec2 pill_max( bb.Max.x,            bb.GetCenter( ).y + pill_h * 0.5f );
     const ImVec2 pill_min( pill_max.x - pill_w, bb.GetCenter( ).y - pill_h * 0.5f );
 
-    const ImVec4 off_v = ImColor( 0.10f, 0.13f, 0.24f, gui.m_fade ).Value;  // visible navy-gray when OFF
+    const ImVec4 off_v = ImColor( 0.10f, 0.13f, 0.24f, gui.m_fade ).Value;
     const ImVec4 on_v  = gui.accent_color.to_im_color( ).Value;
     const ImVec4 col_v = ImLerp( off_v, on_v, a );
     draw->AddRectFilled( pill_min, pill_max, ImColor( col_v ), pill_h * 0.5f );
 
-    // subtle hover ring
     if ( hovered ) {
         draw->AddRect( pill_min, pill_max,
                        ImColor( 1.f, 1.f, 1.f, 0.07f * gui.m_fade ), pill_h * 0.5f );
     }
 
-    // -- white knob -----------------------------------------------------------
     const float knob_r = pill_h * 0.5f - 2.f;
     const float knob_x = ImLerp( pill_min.x + knob_r + 2.f,
                                  pill_max.x - knob_r - 2.f, a );
@@ -202,17 +189,12 @@ bool c_gui::toggle( const char* label, bool* v ) {
     draw->AddCircleFilled( ImVec2( knob_x, knob_y ), knob_r,
                            ImColor( 1.f, 1.f, 1.f, gui.m_fade ) );
 
-    // -- label ----------------------------------------------------------------
     draw->AddText( ImVec2( pos.x, bb.GetCenter( ).y - label_size.y * 0.5f ),
                    GetColorU32( ImGuiCol_Text ), label );
 
     return pressed;
 }
 
-// -----------------------------------------------------------------------------
-// button -- flat rectangle, fades from gui.button_bg -> gui.button_active on
-// hover/press. Borders use gui.border for the same hairline look as group_box.
-// -----------------------------------------------------------------------------
 bool c_gui::button( const char* label, ImVec2 size_arg ) {
 
     auto window = GetCurrentWindow( );
@@ -260,17 +242,9 @@ bool c_gui::button( const char* label, ImVec2 size_arg ) {
     return pressed;
 }
 
-// -----------------------------------------------------------------------------
-// _slider_scalar -- shared core for slider_float / slider_int.
-//
-// Layout (two-row item):
-//   [ label                                                            value ]
-//   [============================*-------------------------------------------]
-// SliderBehavior handles all click + drag math; we only draw on top of it.
-// -----------------------------------------------------------------------------
 static bool _slider_scalar( const char* label, ImGuiDataType data_type, void* p_v,
                             const void* p_min, const void* p_max,
-                            const char* format ) {
+                            const char* format, float width ) {
 
     using namespace ImGui;
 
@@ -288,14 +262,12 @@ static bool _slider_scalar( const char* label, ImGuiDataType data_type, void* p_
     const auto label_size = CalcTextSize( label,     0, true );
     const auto value_size = CalcTextSize( value_buf, 0, false );
 
-    const float row_w  = GetContentRegionAvail( ).x;
+    const float row_w  = ( width > 0.f ) ? width : GetContentRegionAvail( ).x;
     const float text_h = ImMax( label_size.y, value_size.y );
     const float gap    = 4.f;
     const float bar_h  = 4.f;
-    const float knob_r = 5.f;                    // > bar_h/2 so it pokes out
+    const float knob_r = 5.f;
 
-    // total bb has to extend by knob_r above and below the bar so the knob is
-    // not clipped by ItemAdd's auto-cull.
     ImRect bb ( pos,
                 pos + ImVec2( row_w, text_h + gap + bar_h + ( knob_r - bar_h * 0.5f ) ) );
 
@@ -303,14 +275,9 @@ static bool _slider_scalar( const char* label, ImGuiDataType data_type, void* p_
     if ( !ItemAdd( bb, id ) )
         return false;
 
-    // Rect that the user actually drags (only the bar itself, not the labels).
     const ImRect bar( ImVec2( pos.x,    pos.y + text_h + gap ),
                       ImVec2( bb.Max.x, pos.y + text_h + gap + bar_h ) );
 
-    // SliderBehavior() in modern ImGui only updates the value when g.ActiveId == id;
-    // it does NOT activate the slider itself (only the higher-level SliderScalar()
-    // does, via SetActiveID). We use ButtonBehavior() to perform that activation
-    // on click/drag so the slider actually responds to mouse input.
     bool s_hovered, s_held;
     ButtonBehavior( bar, id, &s_hovered, &s_held );
 
@@ -327,11 +294,10 @@ static bool _slider_scalar( const char* label, ImGuiDataType data_type, void* p_
         BindSystem::get( ).openPopup( label );
     }
 
-    // -- top text row ---------------------------------------------------------
+    const char* label_display_end = FindRenderedTextEnd( label );
     draw->AddText( pos,
-                   GetColorU32( ImGuiCol_Text ), label );
+                   GetColorU32( ImGuiCol_Text ), label, label_display_end );
 
-    // click-to-type: clicking the value turns it into an inline numeric input
     static ImGuiID s_sl_edit_id    = 0;
     static bool    s_sl_edit_focus = false;
 
@@ -372,7 +338,6 @@ static bool _slider_scalar( const char* label, ImGuiDataType data_type, void* p_
         }
     }
 
-    // -- compute fill ratio from raw value (edge-to-edge) ---------------------
     float t = 0.f;
     if ( data_type == ImGuiDataType_Float ) {
         const float vf   = *(const float*)p_v;
@@ -389,7 +354,6 @@ static bool _slider_scalar( const char* label, ImGuiDataType data_type, void* p_
     }
     const float fx = ImLerp( bar.Min.x, bar.Max.x, t );
 
-    // -- bar background + filled portion + knob -------------------------------
     draw->AddRectFilled( bar.Min, bar.Max,                  gui.frame_inactive.to_im_color( ), bar_h * 0.5f );
     draw->AddRectFilled( bar.Min, ImVec2( fx, bar.Max.y ),  gui.accent_color  .to_im_color( ), bar_h * 0.5f );
 
@@ -399,10 +363,277 @@ static bool _slider_scalar( const char* label, ImGuiDataType data_type, void* p_
     return changed;
 }
 
-bool c_gui::slider_float( const char* label, float* v, float v_min, float v_max, const char* format ) {
-    return _slider_scalar( label, ImGuiDataType_Float, v, &v_min, &v_max, format );
+bool c_gui::slider_float( const char* label, float* v, float v_min, float v_max, const char* format, float width ) {
+    return _slider_scalar( label, ImGuiDataType_Float, v, &v_min, &v_max, format, width );
 }
 
 bool c_gui::slider_int( const char* label, int* v, int v_min, int v_max, const char* format ) {
-    return _slider_scalar( label, ImGuiDataType_S32, v, &v_min, &v_max, format );
+    return _slider_scalar( label, ImGuiDataType_S32, v, &v_min, &v_max, format, 0.f );
+}
+
+static float _cell_anim( ImGuiID id, int slot, float target, float speed ) {
+
+    static std::unordered_map< ImU32, float > anims;
+    const ImU32 key = (ImU32)id ^ ( (ImU32)slot * 0x9E3779B9u );
+
+    auto it = anims.find( key );
+    if ( it == anims.end( ) )
+        it = anims.insert( { key, target } ).first;
+
+    it->second = fi_lerp( it->second, target, speed );
+    return it->second;
+}
+
+static ImVec2 _cell_size( ImVec2 size_arg ) {
+
+    ImVec2 sz = size_arg;
+    if ( sz.x <= 0.f ) sz.x = ImGui::GetContentRegionAvail( ).x;
+    if ( sz.y <= 0.f ) sz.y = 24.f;
+    return sz;
+}
+
+bool c_gui::key_cell( const char* id_str, const char* text, bool capturing, ImVec2 size_arg ) {
+
+    auto window = GetCurrentWindow( );
+    if ( window->SkipItems )
+        return false;
+
+    const ImGuiID id   = window->GetID( id_str );
+    const ImVec2  pos  = window->DC.CursorPos;
+    auto          draw = window->DrawList;
+
+    const ImVec2 sz = _cell_size( size_arg );
+    ImRect bb( pos, pos + sz );
+    ItemSize( bb, 0.f );
+    if ( !ItemAdd( bb, id ) )
+        return false;
+
+    bool hovered, held;
+    const bool pressed = ButtonBehavior( bb, id, &hovered, &held );
+
+    const float a = _cell_anim( id, 0, held ? 1.f : ( hovered ? 0.55f : 0.f ), 0.16f );
+    const float c = _cell_anim( id, 1, capturing ? 1.f : 0.f, 0.20f );
+
+    ImVec4 col = ImLerp( gui.button_bg.to_im_color( ).Value,
+                         gui.button_active.to_im_color( ).Value, a );
+
+    if ( c > 0.005f ) {
+        const float pulse = 0.30f + 0.22f * ImSin( (float)GetTime( ) * 6.5f );
+        col = ImLerp( col, gui.accent_color.to_im_color( ).Value, pulse * c );
+    }
+
+    draw->AddRectFilled( bb.Min, bb.Max, ImColor( col ), 4.f );
+    draw->AddRect( bb.Min, bb.Max,
+                   c > 0.005f ? gui.accent_color.to_im_color( 0.55f * c )
+                              : gui.border.to_im_color( 2.5f ), 4.f );
+
+    const ImVec2 ts = CalcTextSize( text );
+    draw->AddText( ImVec2( bb.GetCenter( ).x - ts.x * 0.5f, bb.GetCenter( ).y - ts.y * 0.5f ),
+                   GetColorU32( ImGuiCol_Text ), text );
+
+    return pressed;
+}
+
+bool c_gui::combo_cell( const char* id_str, int* v, const char* const* items, int count,
+                        ImVec2 size_arg ) {
+
+    auto window = GetCurrentWindow( );
+    if ( window->SkipItems )
+        return false;
+
+    const ImGuiID id   = window->GetID( id_str );
+    const ImVec2  pos  = window->DC.CursorPos;
+    auto          draw = window->DrawList;
+
+    const ImVec2 sz = _cell_size( size_arg );
+    ImRect bb( pos, pos + sz );
+    ItemSize( bb, 0.f );
+    if ( !ItemAdd( bb, id ) )
+        return false;
+
+    bool hovered, held;
+    const bool pressed = ButtonBehavior( bb, id, &hovered, &held );
+
+    char popup_id[ 48 ];
+    ImFormatString( popup_id, IM_ARRAYSIZE( popup_id ), "##cbc_%u", (unsigned)id );
+    if ( pressed )
+        OpenPopup( popup_id );
+
+    const bool  open = IsPopupOpen( popup_id );
+    const float a    = _cell_anim( id, 0, ( held || open ) ? 1.f : ( hovered ? 0.55f : 0.f ), 0.16f );
+    const float o    = _cell_anim( id, 1, open ? 1.f : 0.f, 0.20f );
+
+    const ImVec4 col = ImLerp( gui.button_bg.to_im_color( ).Value,
+                               gui.button_active.to_im_color( ).Value, a );
+
+    draw->AddRectFilled( bb.Min, bb.Max, ImColor( col ), 4.f );
+    draw->AddRect( bb.Min, bb.Max, gui.border.to_im_color( 2.5f ), 4.f );
+
+    if ( a > 0.005f ) {
+        const float cx = bb.GetCenter( ).x;
+        draw->AddRectFilled( ImVec2( ImLerp( cx, bb.Min.x + 5.f, a ), bb.Max.y - 2.f ),
+                             ImVec2( ImLerp( cx, bb.Max.x - 5.f, a ), bb.Max.y - 0.7f ),
+                             gui.accent_color.to_im_color( a ), 1.f );
+    }
+
+    const char*  cur = ( *v >= 0 && *v < count ) ? items[ *v ] : "";
+    const ImVec2 ts  = CalcTextSize( cur );
+    draw->AddText( ImVec2( bb.Min.x + 9.f, bb.GetCenter( ).y - ts.y * 0.5f ),
+                   GetColorU32( ImGuiCol_Text ), cur );
+
+    const ImVec2 cc( bb.Max.x - 12.f, bb.GetCenter( ).y );
+    const float  ys = ImLerp( -1.8f,  1.8f, o );
+    const float  yt = ImLerp(  2.8f, -2.8f, o );
+    const ImU32  ac = (ImU32)ImColor( ImLerp( gui.text_disabled.to_im_color( ).Value,
+                                              gui.accent_color.to_im_color( ).Value, a ) );
+    draw->AddTriangleFilled( ImVec2( cc.x - 4.f, cc.y + ys ),
+                             ImVec2( cc.x + 4.f, cc.y + ys ),
+                             ImVec2( cc.x,       cc.y + yt ), ac );
+
+    bool changed = false;
+    SetNextWindowPos( ImVec2( bb.Min.x, bb.Max.y + 3.f ) );
+    SetNextWindowSize( ImVec2( sz.x, 0.f ) );
+    PushStyleColor( ImGuiCol_PopupBg,       (ImU32)ImColor( 0.020f, 0.035f, 0.062f, 0.98f ) );
+    PushStyleColor( ImGuiCol_Border,        (ImU32)gui.border.to_im_color( 2.5f ) );
+    PushStyleColor( ImGuiCol_Text,          (ImU32)gui.text.to_im_color( ) );
+    PushStyleColor( ImGuiCol_Header,        (ImU32)gui.accent_color.to_im_color( 0.35f ) );
+    PushStyleColor( ImGuiCol_HeaderHovered, (ImU32)gui.button_active.to_im_color( ) );
+    PushStyleVar( ImGuiStyleVar_WindowPadding,  ImVec2( 5.f, 5.f ) );
+    PushStyleVar( ImGuiStyleVar_WindowRounding, 4.f );
+    if ( BeginPopup( popup_id ) ) {
+        for ( int i = 0; i < count; ++i )
+            if ( Selectable( items[ i ], i == *v ) ) { *v = i; changed = true; }
+        EndPopup( );
+    }
+    PopStyleVar( 2 );
+    PopStyleColor( 5 );
+
+    return changed;
+}
+
+bool c_gui::slider_cell( const char* id_str, float* v, float v_min, float v_max,
+                         ImVec2 size_arg, const char* format ) {
+
+    auto window = GetCurrentWindow( );
+    if ( window->SkipItems )
+        return false;
+
+    const ImGuiID id   = window->GetID( id_str );
+    const ImVec2  pos  = window->DC.CursorPos;
+    auto          draw = window->DrawList;
+
+    const ImVec2 sz = _cell_size( size_arg );
+    ImRect bb( pos, pos + sz );
+    ItemSize( bb, 0.f );
+    if ( !ItemAdd( bb, id ) )
+        return false;
+
+    char buf[ 64 ];
+    ImFormatString( buf, IM_ARRAYSIZE( buf ), format, *v );
+    ImVec2 ts = CalcTextSize( buf );
+
+    const float gap    = 6.f;
+    const float bar_h  = 4.f;
+    const float knob_r = 5.f;
+    const float pad_r  = 2.f;
+    const float val_w  = ImMax( ts.x + pad_r, 30.f );
+
+    const float cy     = bb.GetCenter( ).y;
+    const float bar_x1 = ImMax( bb.Min.x + knob_r * 2.f, bb.Max.x - val_w - gap );
+    const ImRect bar( ImVec2( bb.Min.x, cy - bar_h * 0.5f ),
+                      ImVec2( bar_x1,   cy + bar_h * 0.5f ) );
+
+    bool hovered, held;
+    ButtonBehavior( bar, id, &hovered, &held );
+
+    ImRect grab_bb;
+    bool changed = SliderBehavior( bar, id, ImGuiDataType_Float, v, &v_min, &v_max,
+                                   format, ImGuiSliderFlags_None, &grab_bb );
+    if ( changed )
+        ImFormatString( buf, IM_ARRAYSIZE( buf ), format, *v );
+
+    static ImGuiID s_sc_edit_id    = 0;
+    static bool    s_sc_edit_focus = false;
+
+    const ImRect value_rect( ImVec2( bb.Max.x - val_w - gap, bb.Min.y ),
+                             ImVec2( bb.Max.x,               bb.Max.y ) );
+
+    if ( s_sc_edit_id == id ) {
+        const float  edit_w        = ImMax( val_w + gap, 46.f );
+        const ImVec2 layout_cursor = window->DC.CursorPos;
+        SetCursorScreenPos( ImVec2( bb.Max.x - edit_w, cy - GetFontSize( ) * 0.5f - 3.f ) );
+        SetNextItemWidth( edit_w );
+        PushStyleColor( ImGuiCol_FrameBg, (ImU32)gui.frame_active.to_im_color( ) );
+        PushStyleVar  ( ImGuiStyleVar_FramePadding, ImVec2( 2.f, 2.f ) );
+        char edit_lbl[ 32 ];
+        ImFormatString( edit_lbl, IM_ARRAYSIZE( edit_lbl ), "##sce%u", (unsigned)id );
+        if ( s_sc_edit_focus ) { SetKeyboardFocusHere( ); s_sc_edit_focus = false; }
+        const bool commit = InputFloat( edit_lbl, v, 0.f, 0.f, format,
+                                        ImGuiInputTextFlags_EnterReturnsTrue
+                                      | ImGuiInputTextFlags_AutoSelectAll );
+        PopStyleVar  ( 1 );
+        PopStyleColor( 1 );
+        if ( commit || IsItemDeactivated( ) ) {
+            *v           = ImClamp( *v, v_min, v_max );
+            s_sc_edit_id = 0;
+            changed      = true;
+        }
+        window->DC.CursorPos = layout_cursor;
+    }
+
+    float t = 0.f;
+    if ( v_max != v_min )
+        t = ImClamp( ( *v - v_min ) / ( v_max - v_min ), 0.f, 1.f );
+    const float fx = ImLerp( bar.Min.x, bar.Max.x, t );
+
+    draw->AddRectFilled( bar.Min, bar.Max,                 gui.frame_inactive.to_im_color( ), bar_h * 0.5f );
+    draw->AddRectFilled( bar.Min, ImVec2( fx, bar.Max.y ), gui.accent_color  .to_im_color( ), bar_h * 0.5f );
+    draw->AddCircleFilled( ImVec2( fx, cy ), knob_r, ImColor( 1.f, 1.f, 1.f, gui.m_fade ) );
+
+    if ( s_sc_edit_id != id ) {
+        const bool vhov = IsMouseHoveringRect( value_rect.Min, value_rect.Max );
+        draw->AddText( ImVec2( bb.Max.x - ts.x - pad_r, cy - ts.y * 0.5f ),
+                       vhov ? GetColorU32( ImGuiCol_Text )
+                            : GetColorU32( ImGuiCol_TextDisabled ), buf );
+        if ( vhov && IsMouseClicked( 0 ) ) {
+            s_sc_edit_id    = id;
+            s_sc_edit_focus = true;
+        }
+    }
+
+    return changed;
+}
+
+bool c_gui::icon_x_cell( const char* id_str, ImVec2 size_arg ) {
+
+    auto window = GetCurrentWindow( );
+    if ( window->SkipItems )
+        return false;
+
+    const ImGuiID id   = window->GetID( id_str );
+    const ImVec2  pos  = window->DC.CursorPos;
+    auto          draw = window->DrawList;
+
+    const ImVec2 sz = _cell_size( size_arg );
+    ImRect bb( pos, pos + sz );
+    ItemSize( bb, 0.f );
+    if ( !ItemAdd( bb, id ) )
+        return false;
+
+    bool hovered, held;
+    const bool pressed = ButtonBehavior( bb, id, &hovered, &held );
+
+    const float a = _cell_anim( id, 0, hovered ? 1.f : 0.f, 0.18f );
+
+    if ( a > 0.005f )
+        draw->AddRectFilled( bb.Min, bb.Max, gui.accent_color.to_im_color( 0.18f * a ), 4.f );
+
+    const ImVec2 cc = bb.GetCenter( );
+    const float  r  = 3.4f + 0.6f * a;
+    const ImU32  xc = (ImU32)ImColor( ImLerp( gui.text_disabled.to_im_color( ).Value,
+                                              gui.accent_color.to_im_color( ).Value, a ) );
+    draw->AddLine( cc + ImVec2( -r, -r ), cc + ImVec2( r, r ), xc, 1.5f );
+    draw->AddLine( cc + ImVec2( -r,  r ), cc + ImVec2( r, -r ), xc, 1.5f );
+
+    return pressed;
 }

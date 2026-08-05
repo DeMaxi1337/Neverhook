@@ -4,7 +4,6 @@
 
 using namespace geode::prelude;
 
-// No Wave Pulse / No Wave Trail / Solid Wave Trail (stroke side).
 class $modify(NHCosmeticHardStreak, HardStreak) {
     void updateStroke(float dt) {
         auto& c = Config::get();

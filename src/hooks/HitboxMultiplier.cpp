@@ -4,7 +4,6 @@
 
 using namespace geode::prelude;
 
-// Hitbox Multiplier -- scales player/solid/hazard hitboxes.
 class $modify(NHHitboxMultiplier, GameObject) {
     cocos2d::CCRect getObjectRect(float p0, float p1) {
         auto& c = Config::get();

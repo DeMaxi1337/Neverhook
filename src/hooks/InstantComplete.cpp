@@ -4,7 +4,6 @@
 
 using namespace geode::prelude;
 
-// Instant Complete.
 class $modify(NHInstantComplete, PlayLayer) {
     struct Fields {
         bool fired = false;

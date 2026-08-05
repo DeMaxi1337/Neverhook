@@ -5,8 +5,6 @@
 
 using namespace geode::prelude;
 
-// Keeps the pause button usable during the level-complete animation, so a run
-// can be paused/restarted even after the end trigger fires.
 class $modify(NHPauseDuringComplete, PlayLayer) {
     void pauseGame(bool p0) {
         if (!Config::get().pauseDuringComplete)

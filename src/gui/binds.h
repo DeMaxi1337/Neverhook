@@ -95,6 +95,48 @@ static const char* nh_vk_name( int vk ) {
     }
 }
 
+static void nh_breadcrumb( const std::string& path ) {
+
+    std::vector<std::string> parts;
+    std::string cur;
+    for ( char ch : path ) {
+        if ( ch == '>' ) { parts.push_back( cur ); cur.clear( ); }
+        else               cur.push_back( ch );
+    }
+    parts.push_back( cur );
+
+    ImDrawList*  draw = GetWindowDrawList( );
+    const ImVec2 p    = GetCursorScreenPos( );
+    const float  y    = p.y + 3.f;
+    float        x    = p.x + 2.f;
+    bool         first = true;
+
+    for ( size_t i = 0; i < parts.size( ); ++i ) {
+
+        const size_t b = parts[ i ].find_first_not_of( ' ' );
+        if ( b == std::string::npos ) continue;
+        const size_t e = parts[ i ].find_last_not_of( ' ' );
+        const std::string seg = parts[ i ].substr( b, e - b + 1 );
+
+        if ( !first ) {
+            const ImVec2 ss = CalcTextSize( ">" );
+            draw->AddText( ImVec2( x + 5.f, y ), (ImU32)gui.text_disabled.to_im_color( 0.55f ), ">" );
+            x += ss.x + 11.f;
+        }
+        first = false;
+
+        draw->AddText( ImVec2( x, y ), (ImU32)gui.text_disabled.to_im_color( ), seg.c_str( ) );
+        x += CalcTextSize( seg.c_str( ) ).x;
+    }
+
+    Dummy( ImVec2( 10.f, CalcTextSize( "A" ).y + 9.f ) );
+}
+
+inline constexpr int kHkMaxRows = 7;
+
+struct HkRow { std::string feat; int bindIdx; };
+using HkGroups = std::vector<std::pair<std::string, std::vector<HkRow>>>;
+
 struct BindEntry {
     int      id           = 0;
     int      vk           = 0;
@@ -107,6 +149,7 @@ struct BindEntry {
 
 struct FeatureInfo {
     std::string            name;
+    std::string            path     = "MISC";
     bool*                  boolPtr  = nullptr;
     float*                 floatPtr = nullptr;
     float                  minVal   = 0.f;
@@ -123,11 +166,15 @@ public:
         return inst;
     }
 
+    void category(const char* path) { m_curPath = path; }
+
     void registerBool(const std::string& name, bool* ptr) {
         if (m_features.count(name)) { m_features[name].boolPtr = ptr; return; }
         FeatureInfo fi;
         fi.name = name; fi.boolPtr = ptr; fi.hasValue = false;
+        fi.path = m_curPath;
         m_features[name] = std::move(fi);
+        m_order.push_back(name);
         applyPending(name);
     }
 
@@ -138,12 +185,12 @@ public:
         }
         FeatureInfo fi;
         fi.name = name; fi.floatPtr = ptr; fi.minVal = mn; fi.maxVal = mx; fi.hasValue = true;
+        fi.path = m_curPath;
         m_features[name] = std::move(fi);
+        m_order.push_back(name);
         applyPending(name);
     }
 
-    // Toggle that also carries an associated value slider (e.g. Speedhack + Speed).
-    // Binding it shows "New Value" and applies both the bool and the value.
     void registerValued(const std::string& name, bool* bptr, float* fptr, float mn, float mx) {
         if (m_features.count(name)) {
             auto& fi = m_features[name];
@@ -154,7 +201,9 @@ public:
         FeatureInfo fi;
         fi.name = name; fi.boolPtr = bptr; fi.floatPtr = fptr;
         fi.minVal = mn; fi.maxVal = mx; fi.hasValue = true;
+        fi.path = m_curPath;
         m_features[name] = std::move(fi);
+        m_order.push_back(name);
         applyPending(name);
     }
 
@@ -172,6 +221,40 @@ public:
     }
 
     bool rmbClicked() const { return m_rmbClicked; }
+
+    std::vector<std::string> featureNames() const { return m_order; }
+
+    bool hasFeature(const std::string& name) const {
+        return m_features.count(name) != 0;
+    }
+
+    bool getFeatureBool(const std::string& name, bool* out) const {
+        auto it = m_features.find(name);
+        if (it == m_features.end() || !it->second.boolPtr) return false;
+        *out = *it->second.boolPtr;
+        return true;
+    }
+
+    bool setFeatureBool(const std::string& name, bool value) {
+        auto it = m_features.find(name);
+        if (it == m_features.end() || !it->second.boolPtr) return false;
+        *it->second.boolPtr = value;
+        return true;
+    }
+
+    bool getFeatureValue(const std::string& name, float* out) const {
+        auto it = m_features.find(name);
+        if (it == m_features.end() || !it->second.floatPtr) return false;
+        *out = *it->second.floatPtr;
+        return true;
+    }
+
+    bool setFeatureValue(const std::string& name, float value) {
+        auto it = m_features.find(name);
+        if (it == m_features.end() || !it->second.floatPtr) return false;
+        *it->second.floatPtr = ImClamp(value, it->second.minVal, it->second.maxVal);
+        return true;
+    }
 
     void process() {
 #ifdef _WIN32
@@ -335,167 +418,309 @@ public:
         PopStyleVar(3);
     }
 
+    HkGroups collectHotkeyGroups() {
+        HkGroups groups;
+
+        for (auto& name : m_order) {
+            auto it = m_features.find(name);
+            if (it == m_features.end()) continue;
+            FeatureInfo& fi = it->second;
+            for (int i = 0; i < (int)fi.binds.size(); ++i) {
+                if (fi.binds[i].vk == 0 && fi.binds[i].mode != BindMode::AlwaysOn) continue;
+                auto g = std::find_if(groups.begin(), groups.end(),
+                                      [&](const std::pair<std::string, std::vector<HkRow>>& pr) {
+                                          return pr.first == fi.path;
+                                      });
+                if (g == groups.end()) {
+                    groups.push_back(std::make_pair(fi.path, std::vector<HkRow>{}));
+                    g = groups.end() - 1;
+                }
+                HkRow row;
+                row.feat    = name;
+                row.bindIdx = i;
+                g->second.push_back(row);
+            }
+        }
+
+        return groups;
+    }
+
+    float hotkeysTargetHeight(const HkGroups& groups) {
+        const ImGuiStyle& st = GetStyle();
+
+        const float text_h   = CalcTextSize("A").y;
+        const float row_h    = 32.f;
+        const float hrow_h   = text_h + 16.f;
+        const float crumb_h  = text_h + 9.f + st.ItemSpacing.y;
+        const float card_pad = 10.f;
+        const float card_gap = 10.f + st.ItemSpacing.y;
+        const float hdr_h    = 40.f;
+        const float body_pad = 28.f;
+
+        if (groups.empty())
+            return hdr_h + body_pad + 92.f;
+
+        float content = 0.f;
+        int   used    = 0;
+
+        for (const auto& g : groups) {
+            const int avail = kHkMaxRows - used;
+            if (avail <= 0) break;
+            const int take = ImMin((int)g.second.size(), avail);
+            content += crumb_h + hrow_h + row_h * (float)take + card_pad + card_gap;
+            used    += take;
+        }
+
+        return hdr_h + body_pad + content;
+    }
+
     void drawHotkeysList() {
-        if (!m_hotkeysOpen) return;
-        if (gui.m_fade < 0.004f) { m_hotkeysOpen = false; return; }
 
-        SetNextWindowSize(ImVec2(560.f, 360.f), ImGuiCond_FirstUseEver);
-        SetNextWindowPos(ImVec2(200.f, 90.f),   ImGuiCond_FirstUseEver);
+        if (gui.m_fade < 0.004f) {
+            m_hotkeysOpen = false;
+            m_hkAnim = m_hkAnimH = 0.f;
+            return;
+        }
 
-        PushStyleVar(ImGuiStyleVar_Alpha,          gui.m_fade);
+        m_hkAnim = fi_lerp(m_hkAnim, m_hotkeysOpen ? 1.f : 0.f, 0.28f);
+        if (!m_hotkeysOpen && m_hkAnim < 0.004f) { m_hkAnimH = 0.f; return; }
+
+        const HkGroups groups  = collectHotkeyGroups();
+        const float    targetH = hotkeysTargetHeight(groups);
+
+        if (m_hkAnimH <= 0.f) m_hkAnimH = targetH * 0.86f;
+        m_hkAnimH = fi_lerp(m_hkAnimH, targetH, 0.30f);
+
+        const float fade = gui.m_fade * m_hkAnim;
+
+        SetNextWindowSize(ImVec2(880.f, m_hkAnimH), ImGuiCond_Always);
+        SetNextWindowPos (ImVec2(170.f,  70.f),     ImGuiCond_FirstUseEver);
+
+        PushStyleVar(ImGuiStyleVar_Alpha,          fade);
         PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
         PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(0.f, 0.f));
         PushStyleColor(ImGuiCol_WindowBg, (ImU32)ImColor(0.012f, 0.020f, 0.045f, 1.f));
-        PushStyleColor(ImGuiCol_Border,   (ImU32)gui.border.to_im_color());
+        PushStyleColor(ImGuiCol_Border,   (ImU32)gui.border.to_im_color(2.5f));
 
         if (Begin("##nhhotkeys", nullptr,
-                  ImGuiWindowFlags_NoDecoration |
-                  ImGuiWindowFlags_NoSavedSettings)) {
+                  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings)) {
 
             ImGuiWindow* window = GetCurrentWindow();
             ImDrawList*  draw   = window->DrawList;
-            const ImVec2 pos    = window->Pos;
-            const ImVec2 size   = window->Size;
-            const float  hdr_h  = 44.f;
+            const ImVec2 wpos   = window->Pos;
+            const ImVec2 wsize  = window->Size;
+            const float  hdr_h  = 40.f;
 
-            draw->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + hdr_h),
-                                ImColor(0.022f, 0.038f, 0.072f, gui.m_fade),
-                                6.f, ImDrawFlags_RoundCornersTop);
-            draw->AddLine(ImVec2(pos.x + 8.f, pos.y + hdr_h),
-                          ImVec2(pos.x + size.x - 8.f, pos.y + hdr_h),
-                          gui.border.to_im_color());
+            draw->AddRectFilled(wpos, ImVec2(wpos.x + wsize.x, wpos.y + hdr_h),
+                                gui.group_box_bg.to_im_color(), 6.f, ImDrawFlags_RoundCornersTop);
+            draw->AddLine(ImVec2(wpos.x + 1.f,           wpos.y + hdr_h),
+                          ImVec2(wpos.x + wsize.x - 1.f, wpos.y + hdr_h),
+                          gui.border.to_im_color(2.5f));
+            draw->AddLine(ImVec2(wpos.x + 7.f,           wpos.y + 1.f),
+                          ImVec2(wpos.x + wsize.x - 7.f, wpos.y + 1.f),
+                          ImColor(1.f, 1.f, 1.f, 0.055f * fade));
 
-            draw->AddRectFilled(pos + ImVec2(14.f, 15.f), pos + ImVec2(17.f, 29.f),
-                                gui.accent_color.to_im_color(), 1.f);
-            draw->AddText(pos + ImVec2(27.f, 14.f), gui.accent_color.to_im_color(), "Hotkeys list");
-            draw->AddText(pos + ImVec2(26.f, 14.f), GetColorU32(ImGuiCol_Text), "Hotkeys list");
-
-            const float  cb = 22.f;
-            const ImVec2 cmin(pos.x + size.x - cb - 12.f, pos.y + (hdr_h - cb) * 0.5f);
-            SetCursorScreenPos(cmin);
-            if (InvisibleButton("##hkclose", ImVec2(cb, cb))) m_hotkeysOpen = false;
-            const bool ch = IsItemHovered();
-            if (ch) draw->AddRectFilled(cmin, cmin + ImVec2(cb, cb),
-                                        gui.accent_color.to_im_color(0.18f), 4.f);
-            const ImVec2 cc = cmin + ImVec2(cb * 0.5f, cb * 0.5f);
-            const ImU32  xcol = ch ? (ImU32)gui.accent_color.to_im_color()
-                                   : (ImU32)gui.text_disabled.to_im_color();
-            draw->AddLine(cc + ImVec2(-4.f, -4.f), cc + ImVec2(4.f, 4.f), xcol, 1.6f);
-            draw->AddLine(cc + ImVec2(-4.f,  4.f), cc + ImVec2(4.f, -4.f), xcol, 1.6f);
-
-            SetCursorScreenPos(ImVec2(pos.x + 14.f, pos.y + hdr_h + 12.f));
-            BeginChild("##hkbody", ImVec2(size.x - 28.f, size.y - hdr_h - 24.f));
-
-            PushStyleColor(ImGuiCol_TableHeaderBg,    (ImU32)gui.frame_inactive.to_im_color());
-            PushStyleColor(ImGuiCol_TableBorderLight, (ImU32)gui.border.to_im_color(2.f));
-            PushStyleColor(ImGuiCol_TableRowBg,       (ImU32)ImColor(0.f, 0.f, 0.f, 0.f));
-            PushStyleColor(ImGuiCol_TableRowBgAlt,    (ImU32)ImColor(1.f, 1.f, 1.f, 0.02f));
-            PushStyleVar(ImGuiStyleVar_CellPadding,   ImVec2(8.f, 6.f));
-
-            if (BeginTable("##hktbl", 6,
-                    ImGuiTableFlags_RowBg |
-                    ImGuiTableFlags_BordersInnerH |
-                    ImGuiTableFlags_SizingStretchProp |
-                    ImGuiTableFlags_PadOuterX |
-                    ImGuiTableFlags_ScrollY,
-                    GetContentRegionAvail())) {
-
-                TableSetupColumn("Feature",  ImGuiTableColumnFlags_WidthStretch, 2.2f);
-                TableSetupColumn("Key",      ImGuiTableColumnFlags_WidthStretch, 1.1f);
-                TableSetupColumn("Mode",     ImGuiTableColumnFlags_WidthStretch, 1.2f);
-                TableSetupColumn("In Binds", ImGuiTableColumnFlags_WidthStretch, 1.0f);
-                TableSetupColumn("Value",    ImGuiTableColumnFlags_WidthStretch, 1.0f);
-                TableSetupColumn("##del",    ImGuiTableColumnFlags_WidthFixed,  26.f);
-                TableSetupScrollFreeze(0, 1);
-                TableHeadersRow();
-
-                ImDrawList* rd = GetWindowDrawList();
-
-                struct Row { std::string feat; int bindIdx; int bindId; };
-                std::vector<Row> rows;
-                for (auto& [name, fi] : m_features)
-                    for (int i = 0; i < (int)fi.binds.size(); ++i) {
-                        auto& b = fi.binds[i];
-                        if (b.vk == 0 && b.mode != BindMode::AlwaysOn) continue;
-                        rows.push_back({name, i, b.id});
-                    }
-                std::sort(rows.begin(), rows.end(),
-                          [](const Row& a, const Row& b){ return a.bindId > b.bindId; });
-
-                static const char* modes[] = { "Always On", "Toggle", "Hold" };
-                std::string toDelName;
-                int         toDelIdx = -1;
-
-                if (rows.empty()) {
-                    TableNextRow();
-                    TableSetColumnIndex(0);
-                    PushStyleColor(ImGuiCol_Text, (ImU32)gui.text_disabled.to_im_color());
-                    TextUnformatted("No binds yet - right-click a feature to add one");
-                    PopStyleColor();
-                }
-
-                for (int ri = 0; ri < (int)rows.size(); ++ri) {
-                    auto* fi = getFeature(rows[ri].feat);
-                    if (!fi || rows[ri].bindIdx >= (int)fi->binds.size()) continue;
-                    auto& entry = fi->binds[rows[ri].bindIdx];
-
-                    TableNextRow();
-                    TableSetColumnIndex(0); TextUnformatted(fi->name.c_str());
-
-                    TableSetColumnIndex(1);
-                    if (entry.vk != 0) {
-                        const char*  kn  = nh_vk_name(entry.vk);
-                        const ImVec2 ksz = CalcTextSize(kn);
-                        const ImVec2 kp  = GetCursorScreenPos();
-                        rd->AddRectFilled(ImVec2(kp.x - 4.f, kp.y - 1.f),
-                                          ImVec2(kp.x + ksz.x + 4.f, kp.y + ksz.y + 1.f),
-                                          gui.frame_active.to_im_color(), 3.f);
-                        TextUnformatted(kn);
-                    } else {
-                        PushStyleColor(ImGuiCol_Text, (ImU32)gui.text_disabled.to_im_color());
-                        TextUnformatted("-");
-                        PopStyleColor();
-                    }
-
-                    TableSetColumnIndex(2);
-                    PushStyleColor(ImGuiCol_Text, (ImU32)gui.accent_color.to_im_color());
-                    TextUnformatted(modes[(int)entry.mode]);
-                    PopStyleColor();
-
-                    TableSetColumnIndex(3);
-                    Text("%s", entry.showInBinds ? "Show" : "Hidden");
-
-                    TableSetColumnIndex(4);
-                    if (fi->hasValue) Text("%.2f", entry.value);
-                    else              Text("%s", entry.runtimeState ? "on" : "off");
-
-                    TableSetColumnIndex(5);
-                    char del_id[32];
-                    snprintf(del_id, sizeof(del_id), "##hkd%d", ri);
-                    const ImVec2 dp = GetCursorScreenPos();
-                    if (InvisibleButton(del_id, ImVec2(18.f, 18.f))) {
-                        toDelName = rows[ri].feat; toDelIdx = rows[ri].bindIdx;
-                    }
-                    const bool   dh  = IsItemHovered();
-                    const ImVec2 dc  = ImVec2(dp.x + 9.f, dp.y + 9.f);
-                    if (dh) rd->AddRectFilled(dp, ImVec2(dp.x + 18.f, dp.y + 18.f),
-                                              gui.accent_color.to_im_color(0.20f), 3.f);
-                    const ImU32 dcol = dh ? (ImU32)gui.accent_color.to_im_color()
-                                          : (ImU32)gui.text_disabled.to_im_color();
-                    rd->AddLine(ImVec2(dc.x - 3.5f, dc.y - 3.5f), ImVec2(dc.x + 3.5f, dc.y + 3.5f), dcol, 1.5f);
-                    rd->AddLine(ImVec2(dc.x - 3.5f, dc.y + 3.5f), ImVec2(dc.x + 3.5f, dc.y - 3.5f), dcol, 1.5f);
-                }
-
-                if (toDelIdx >= 0) {
-                    auto* fi = getFeature(toDelName);
-                    if (fi) fi->binds.erase(fi->binds.begin() + toDelIdx);
-                }
-                EndTable();
+            {
+                const char*  title = "All Hotkeys";
+                const ImVec2 tsz   = CalcTextSize(title);
+                draw->AddText(ImVec2(wpos.x + (wsize.x - tsz.x) * 0.5f,
+                                     wpos.y + (hdr_h - tsz.y) * 0.5f),
+                              GetColorU32(ImGuiCol_Text), title);
             }
 
-            PopStyleVar(1);
-            PopStyleColor(4);
+            {
+                const float  cb = 22.f;
+                const ImVec2 cmin(wpos.x + wsize.x - cb - 12.f, wpos.y + (hdr_h - cb) * 0.5f);
+                SetCursorScreenPos(cmin);
+                if (gui.icon_x_cell("##hkclose", ImVec2(cb, cb)))
+                    m_hotkeysOpen = false;
+            }
+
+            SetCursorScreenPos(ImVec2(wpos.x + 16.f, wpos.y + hdr_h + 14.f));
+            PushStyleVar(ImGuiStyleVar_ScrollbarSize, 6.f);
+            PushStyleColor(ImGuiCol_ScrollbarBg,          (ImU32)ImColor(0.f, 0.f, 0.f, 0.f));
+            PushStyleColor(ImGuiCol_ScrollbarGrab,        (ImU32)gui.frame_active.to_im_color());
+            PushStyleColor(ImGuiCol_ScrollbarGrabHovered, (ImU32)gui.accent_color.to_im_color(0.55f));
+            PushStyleColor(ImGuiCol_ScrollbarGrabActive,  (ImU32)gui.accent_color.to_im_color());
+            BeginChild("##hkbody", ImVec2(wsize.x - 32.f, wsize.y - hdr_h - 28.f));
+
+            if (groups.empty()) {
+                const char*  msg = "No binds yet - right-click a feature to add one";
+                const ImVec2 msz = CalcTextSize(msg);
+                SetCursorPos(ImVec2((GetContentRegionAvail().x - msz.x) * 0.5f, 46.f));
+                PushStyleColor(ImGuiCol_Text, (ImU32)gui.text_disabled.to_im_color());
+                TextUnformatted(msg);
+                PopStyleColor();
+            }
+
+            static const char* kModes[] = { "Always On", "Toggle", "Hold" };
+            static const char* kVis  [] = { "Visible", "Hidden" };
+            static const char* kOnOff[] = { "On", "Off" };
+
+            const float text_h  = CalcTextSize("A").y;
+            const float cell_h  = 24.f;
+            const float row_h   = cell_h + 8.f;
+            const float hrow_h  = text_h + 16.f;
+            const float pad_x   = 12.f;
+            const float gap     = 10.f;
+            const float del_w   = 24.f;
+
+            std::string toDelName;
+            int         toDelIdx = -1;
+
+            for (size_t gi = 0; gi < groups.size(); ++gi) {
+                const std::vector<HkRow>& rows = groups[gi].second;
+
+                nh_breadcrumb(groups[gi].first);
+
+                const float  card_w = GetContentRegionAvail().x;
+                const float  card_h = hrow_h + row_h * (float)rows.size() + 10.f;
+                const ImVec2 cpos   = GetCursorScreenPos();
+
+                ImDrawList* cd = GetWindowDrawList();
+
+                cd->AddRectFilled(cpos + ImVec2(2.f, 3.f),
+                                  cpos + ImVec2(card_w + 2.f, card_h + 3.f),
+                                  ImColor(0.f, 0.f, 0.f, 0.24f * fade), 6.f);
+                cd->AddRectFilled(cpos, cpos + ImVec2(card_w, card_h),
+                                  gui.group_box_bg.to_im_color(), 6.f);
+                cd->AddRect      (cpos, cpos + ImVec2(card_w, card_h),
+                                  gui.border.to_im_color(2.5f), 6.f);
+                cd->AddLine(cpos + ImVec2(7.f, 1.f), cpos + ImVec2(card_w - 7.f, 1.f),
+                            ImColor(1.f, 1.f, 1.f, 0.055f * fade));
+
+                const float usable = card_w - pad_x * 2.f - del_w - gap * 5.f;
+                const float w_feat = usable * 0.24f;
+                const float w_rest = usable * 0.19f;
+
+                const float cx0 = cpos.x + pad_x;
+                const float cx1 = cx0 + w_feat + gap;
+                const float cx2 = cx1 + w_rest + gap;
+                const float cx3 = cx2 + w_rest + gap;
+                const float cx4 = cx3 + w_rest + gap;
+                const float cx5 = cx4 + w_rest + gap;
+
+                {
+                    const ImU32 hc = GetColorU32(ImGuiCol_Text, 0.55f);
+                    auto head = [&](float x, float w, const char* t) {
+                        const ImVec2 s = CalcTextSize(t);
+                        cd->AddText(ImVec2(x + (w - s.x) * 0.5f, cpos.y + 9.f), hc, t);
+                    };
+                    head(cx0, w_feat, "Feature");
+                    head(cx1, w_rest, "Key");
+                    head(cx2, w_rest, "Mode");
+                    head(cx3, w_rest, "Visibility");
+                    head(cx4, w_rest, "New Value");
+                }
+
+                for (size_t ri = 0; ri < rows.size(); ++ri) {
+                    FeatureInfo* fi = getFeature(rows[ri].feat);
+                    if (!fi || rows[ri].bindIdx >= (int)fi->binds.size()) continue;
+                    BindEntry& e = fi->binds[rows[ri].bindIdx];
+
+                    const float ry = cpos.y + hrow_h + row_h * (float)ri;
+                    const float wy = ry + (row_h - cell_h) * 0.5f;
+
+                    PushID(rows[ri].feat.c_str());
+                    PushID(e.id);
+
+                    const ImRect rrect(ImVec2(cpos.x + 4.f, ry),
+                                       ImVec2(cpos.x + card_w - 4.f, ry + row_h));
+                    {
+                        static std::unordered_map<ImU32, float> rowAnims;
+                        const ImU32 rid = (ImU32)GetID("##rowhov");
+                        auto ra = rowAnims.find(rid);
+                        if (ra == rowAnims.end()) ra = rowAnims.insert({ rid, 0.f }).first;
+                        const bool rh = IsMouseHoveringRect(rrect.Min, rrect.Max, false);
+                        ra->second = fi_lerp(ra->second, rh ? 1.f : 0.f, 0.16f);
+                        if (ra->second > 0.005f)
+                            cd->AddRectFilled(rrect.Min, rrect.Max,
+                                              ImColor(1.f, 1.f, 1.f, 0.022f * ra->second * fade), 4.f);
+                    }
+
+                    if (ri > 0)
+                        cd->AddLine(ImVec2(cpos.x + 10.f, ry), ImVec2(cpos.x + card_w - 10.f, ry),
+                                    gui.border.to_im_color(1.6f));
+
+                    {
+                        const ImVec2 s = CalcTextSize(fi->name.c_str());
+                        cd->AddText(ImVec2(cx0 + (w_feat - s.x) * 0.5f,
+                                           ry + (row_h - s.y) * 0.5f),
+                                    GetColorU32(ImGuiCol_Text), fi->name.c_str());
+                    }
+
+                    SetCursorScreenPos(ImVec2(cx1, wy));
+                    if (e.mode == BindMode::AlwaysOn) {
+                        BeginDisabled();
+                        gui.key_cell("##k", "Always", false, ImVec2(w_rest, cell_h));
+                        EndDisabled();
+                    } else {
+                        const bool cap = m_capturingKey
+                                      && m_captureFeature == fi->name
+                                      && m_captureBindId  == e.id;
+                        if (gui.key_cell("##k", cap ? "..." : nh_vk_name(e.vk), cap,
+                                         ImVec2(w_rest, cell_h))) {
+                            m_capturingKey   = true;
+                            m_captureFeature = fi->name;
+                            m_captureBindId  = e.id;
+                        }
+                        if (cap) {
+                            const int got = nh_poll_pressed_vk();
+                            if (got != 0)         { e.vk = got;        m_capturingKey = false; }
+                            if (nh_vk_down(0x1B)) { m_capturingKey = false; }
+                        }
+                    }
+
+                    SetCursorScreenPos(ImVec2(cx2, wy));
+                    {
+                        int mi = (int)e.mode;
+                        if (gui.combo_cell("##m", &mi, kModes, 3, ImVec2(w_rest, cell_h)))
+                            e.mode = (BindMode)mi;
+                    }
+
+                    SetCursorScreenPos(ImVec2(cx3, wy));
+                    {
+                        int vi = e.showInBinds ? 0 : 1;
+                        if (gui.combo_cell("##v", &vi, kVis, 2, ImVec2(w_rest, cell_h)))
+                            e.showInBinds = (vi == 0);
+                    }
+
+                    SetCursorScreenPos(ImVec2(cx4, wy));
+                    if (fi->hasValue) {
+
+                        gui.slider_cell("##val", &e.value, fi->minVal, fi->maxVal,
+                                        ImVec2(w_rest, cell_h));
+                    } else {
+                        int oi = e.runtimeState ? 0 : 1;
+                        if (gui.combo_cell("##onoff", &oi, kOnOff, 2, ImVec2(w_rest, cell_h))) {
+                            e.runtimeState = (oi == 0);
+                            applyEntry(*fi, e, e.runtimeState);
+                        }
+                    }
+
+                    SetCursorScreenPos(ImVec2(cx5, wy));
+                    if (gui.icon_x_cell("##del", ImVec2(del_w, cell_h))) {
+                        toDelName = rows[ri].feat;
+                        toDelIdx  = rows[ri].bindIdx;
+                    }
+
+                    PopID();
+                    PopID();
+                }
+
+                SetCursorScreenPos(ImVec2(cpos.x, cpos.y));
+                Dummy(ImVec2(card_w, card_h + 10.f));
+            }
+
+            if (toDelIdx >= 0) {
+                FeatureInfo* fi = getFeature(toDelName);
+                if (fi && toDelIdx < (int)fi->binds.size())
+                    fi->binds.erase(fi->binds.begin() + toDelIdx);
+            }
+
             EndChild();
+            PopStyleColor(4);
+            PopStyleVar(1);
         }
         End();
 
@@ -513,7 +738,6 @@ public:
         struct Row { std::string label; std::string key; float a; float target; };
         static std::vector<Row> rows;
 
-        // gather active binds + measure ALL configured binds for a fixed width
         struct Active { std::string label; std::string key; };
         std::vector<Active> active;
         float maxLabelW = 0.f, maxKeyW = 0.f;
@@ -540,7 +764,6 @@ public:
             }
         }
 
-        // per-row appear/disappear animation
         for (auto& r : rows) r.target = 0.f;
         for (auto& ac : active) {
             bool found = false;
@@ -554,7 +777,6 @@ public:
         rows.erase(std::remove_if(rows.begin(), rows.end(),
             [](const Row& r){ return r.target == 0.f && r.a < 0.01f; }), rows.end());
 
-        // choose render set: real rows, or a faded preview while the menu is open
         std::vector<Row>  previewRows;
         std::vector<Row>* useRows;
         float globalMul = 1.f;
@@ -609,10 +831,6 @@ public:
         ImVec2 box_pos(bx, by);
         ImVec2 box_end(bx + box_sz.x, by + box_sz.y);
 
-        // dragging (only while the menu is open). Use a transparent ImGui window
-        // + InvisibleButton so it relies on ImGui's own input path (the same one
-        // the menu widgets use) instead of io.WantCaptureMouse, which the cocos
-        // integration forces to true while the menu is open.
         if (menuShown) {
             PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
             PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
@@ -668,7 +886,7 @@ public:
         float content_top = box_pos.y + top_pad + pad_y;
 
         if (style == 2) {
-            // Skeet: dark box + double border + rainbow gradient top lines
+
             if (Vars::kbBackground) {
                 draw->AddRectFilled(box_pos, box_end, mulA((ImU32)ImColor(20, 20, 20, 235), globalA));
                 draw->AddRect(box_pos, box_end, mulA((ImU32)ImColor(18, 18, 18, 255), globalA));
@@ -695,7 +913,7 @@ public:
                 draw->AddRectFilled(box_pos, box_end, mulA((ImU32)ImColor(0.f, 0.f, 0.f, 0.55f), globalA), rounding);
 
             if (style == 1) {
-                // Onetap v3: top line + glow
+
                 if (Vars::kbGlow)
                     for (int i = 4; i >= 1; --i)
                         draw->AddRectFilled(ImVec2(box_pos.x, box_pos.y - (float)i),
@@ -703,7 +921,7 @@ public:
                                             faded(0.05f));
                 draw_line(box_pos.x, box_end.x, box_pos.y, 1.5f);
             } else {
-                // Version 1.5: full rounded accent border + glow
+
                 if (Vars::kbGlow)
                     for (int i = 5; i >= 1; --i) {
                         const float e = (float)i * 2.f;
@@ -808,24 +1026,30 @@ public:
     }
 
     void registerAll() {
+        category("PLAYER > NOCLIP");
         registerBool("Noclip", &Vars::noclip);
         registerBool("Noclip Tint", &Vars::noclipTint);
         registerBool("Noclip Hitsound", &Vars::noclipHitsound);
+        category("PLAYER > DEATH");
         registerBool("No Death Effect", &Vars::noDeathEffect);
         registerBool("No Respawn Flash", &Vars::noRespawnFlash);
         registerBool("No Pause Button", &Vars::noPauseButton);
+        category("GLOBAL > SPEED");
         registerValued("Speedhack", &Vars::speedhack, &Vars::speedhackValue, 0.1f, 5.0f);
         registerBool("Speedhack Audio", &Vars::speedhackAudio);
         registerValued("FPS Bypass", &Vars::fpsUnlock, &Vars::fpsValue, 30.0f, 1000.0f);
         registerBool("Frame Extrapolation", &Vars::frameExtrapolation);
         registerValued("TPS Bypass", &Vars::tpsBypass, &Vars::tpsValue, 1.0f, 10000.0f);
+        category("GLOBAL > MISC");
         registerBool("Compact List", &Vars::compactList);
+        category("MACROS > AUTOCLICKER");
         registerValued("Player 1", &Vars::autoclicker, &Vars::autoclickerCps, 1.0f, 30.0f);
         registerValued("Player 2", &Vars::autoclickerP2, &Vars::autoclickerP2Cps, 1.0f, 30.0f);
+        category("COSMETIC > HUD");
         registerBool("Hide Attempts", &Vars::hideAttempts);
         registerBool("No Glow", &Vars::noGlow);
-        // registerBool("No Camera Shake", &Vars::noCameraShake);
-        // registerBool("No End Shake", &Vars::noEndShake);
+
+        category("COSMETIC > PARTICLES");
         registerBool("No Dash Fire", &Vars::noDashFire);
         registerBool("No Spider Dash", &Vars::noSpiderDash);
         registerBool("No Particles", &Vars::noParticles);
@@ -838,34 +1062,46 @@ public:
         registerBool("No Trail Behind Wave", &Vars::noTrailBehindWave);
         registerBool("No Circle Wave", &Vars::noCircleWave);
         registerBool("Random Seed", &Vars::randomSeed);
+        category("COSMETIC > WAVE");
         registerBool("No Wave Pulse", &Vars::noWavePulse);
         registerBool("No Wave Trail", &Vars::noWaveTrail);
         registerBool("Solid Wave Trail", &Vars::solidWaveTrail);
         registerValued("Wave Trail Size", &Vars::waveTrailSize, &Vars::waveTrailSizeValue, 0.1f, 5.0f);
+        category("OVERLAY > HUD");
         registerBool("Accurate Percentage", &Vars::accuratePercent);
         registerBool("Keybinds", &Vars::keybindsList);
+        category("PLAYER > HITBOX");
         registerBool("Show Hitboxes", &Vars::showHitboxes);
         registerBool("Show On Death", &Vars::showHitboxesOnDeath);
         registerBool("Trajectory Prediction", &Vars::showTrajectory);
+        registerBool("Click Between Frames", &Vars::clickBetweenFrames);
+        category("COSMETIC > EFFECTS");
         registerBool("No Shader", &Vars::noShader);
-        // registerBool("No Portal Lightning", &Vars::noPortalLightning);
+
         registerBool("Hide Complete VFX", &Vars::hideLevelCompleteVfx);
         registerBool("No Music Fade Out", &Vars::noMusicFadeOut);
+        category("LEVEL > AUTOMATION");
         registerBool("Auto Practice Mode", &Vars::autoPracticeMode);
         registerBool("Auto Pickup Coins", &Vars::autoPickupCoins);
         registerBool("Pause On Complete", &Vars::pauseDuringComplete);
         registerBool("Auto Song Download", &Vars::autoSongDownload);
+        category("LEVEL > MISC");
         registerBool("Layout Mode", &Vars::layoutMode);
+        category("BYPASS > UNLOCKS");
         registerBool("Unlock Main Levels", &Vars::unlockMainLevels);
         registerBool("Unlock Shops", &Vars::unlockShops);
         registerBool("Unlock Vaults", &Vars::unlockVaults);
+        category("PLAYER > HITBOX");
         registerBool("Hitbox Multiplier", &Vars::hitboxMultiplier);
+        category("LEVEL > MISC");
         registerBool("Practice Music", &Vars::practiceMusic);
         registerBool("Icon Bypass", &Vars::iconBypass);
         registerBool("No Transition", &Vars::noTransition);
+        category("LEVEL > SAFE MODE");
         registerBool("Safe Mode", &Vars::safeMode);
         registerBool("Freeze Attempts", &Vars::safeFreezeAttempts);
         registerBool("Freeze Jumps", &Vars::safeFreezeJumps);
+        category("LEVEL > CHEATS");
         registerBool("Instant Complete", &Vars::instantComplete);
         registerBool("No Mirror Portal", &Vars::noMirrorPortal);
         registerBool("Instant Restart", &Vars::instantRestart);
@@ -874,6 +1110,7 @@ public:
         registerBool("All Modes Platformer", &Vars::allModesPlatformer);
         registerBool("Verify Hack", &Vars::verifyHack);
         registerBool("Copy Hack", &Vars::copyHack);
+        category("EDITOR > GENERAL");
         registerBool("Hide Editor UI", &Vars::hideEditorUI);
         registerBool("Level Edit", &Vars::levelEdit);
         registerBool("No Custom Obj Limit", &Vars::noCustomObjLimit);
@@ -881,6 +1118,7 @@ public:
         registerBool("Toolbox Button Bypass", &Vars::toolboxButtonBypass);
         registerBool("Slider Limit Bypass", &Vars::sliderLimitBypass);
 
+        category("VALUES > SLIDERS");
         registerFloat("Speed", &Vars::speedhackValue, 0.1f, 5.0f);
         registerFloat("FPS", &Vars::fpsValue, 30.0f, 1000.0f);
         registerFloat("P1 CPS", &Vars::autoclickerCps, 1.0f, 30.0f);
@@ -893,6 +1131,8 @@ public:
 
 private:
     std::unordered_map<std::string, FeatureInfo>            m_features;
+    std::vector<std::string>                                m_order;
+    std::string                                             m_curPath = "MISC";
     std::unordered_map<std::string, std::vector<BindEntry>> m_pending;
     std::unordered_map<std::string, int>                    m_pendingNextId;
 
@@ -903,6 +1143,8 @@ private:
     ImVec2      m_bindAnchor{};
     bool        m_bindReposition = false;
     bool        m_hotkeysOpen    = false;
+    float       m_hkAnim         = 0.f;
+    float       m_hkAnimH        = 0.f;
     bool        m_capturingKey   = false;
     std::string m_captureFeature;
     int         m_captureBindId  = -1;

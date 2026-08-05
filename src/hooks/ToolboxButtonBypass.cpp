@@ -4,7 +4,6 @@
 
 using namespace geode::prelude;
 
-// Toolbox Button Bypass -- unlock the editor button-row limits.
 class $modify(NHToolboxButtonBypass, EditorOptionsLayer) {
     void onButtonRows(cocos2d::CCObject* sender) {
         if (!Config::get().toolboxButtonBypass) {

@@ -4,7 +4,6 @@
 
 using namespace geode::prelude;
 
-// Enters practice mode automatically as soon as a level starts.
 class $modify(NHAutoPracticeMode, PlayLayer) {
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
         if (!PlayLayer::init(level, useReplay, dontCreateObjects))

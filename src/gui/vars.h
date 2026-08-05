@@ -33,6 +33,7 @@ namespace Vars {
     inline bool&  showHitboxes          = Config::get().showHitboxes;
     inline bool&  showHitboxesOnDeath   = Config::get().showHitboxesOnDeath;
     inline bool&  showTrajectory        = Config::get().showTrajectory;
+    inline bool&  clickBetweenFrames    = Config::get().clickBetweenFrames;
 
     inline bool&  tpsBypass             = Config::get().tpsBypass;
     inline float& tpsValue              = Config::get().tpsValue;
@@ -145,6 +146,9 @@ namespace Vars {
     inline bool&  autoSave      = Config::get().autoSave;
     inline int&   menuScale     = Config::get().menuScale;
     inline float& menuAnimSpeed = Config::get().menuAnimSpeed;
+
+    inline bool&  endscreenStats   = Config::get().endscreenStats;
+    inline bool&  endscreenPhrases = Config::get().endscreenPhrases;
 
     inline bool   menuOpen       = false;
 }

@@ -4,7 +4,6 @@
 
 using namespace geode::prelude;
 
-// Autoclicker (P1 / P2).
 class $modify(NHAutoclicker, GJBaseGameLayer) {
     struct Fields {
         double timeP1  = 0.0;

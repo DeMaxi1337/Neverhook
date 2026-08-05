@@ -4,7 +4,6 @@
 
 using namespace geode::prelude;
 
-// Forces the shader pass off so shader-heavy levels render without the effect.
 class $modify(NHNoShader, ShaderLayer) {
     void performCalculations() {
         if (Config::get().noShader) {

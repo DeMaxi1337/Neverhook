@@ -7,10 +7,6 @@
 
 using namespace geode::prelude;
 
-// Hides the burst of circles, light flashes and particles that play when a
-// level is completed, while leaving the same effects intact during gameplay
-// (guarded by PlayLayer::m_levelEndAnimationStarted).
-
 namespace {
     bool hideVfxActive() {
         return Config::get().hideLevelCompleteVfx;

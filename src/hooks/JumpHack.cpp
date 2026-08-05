@@ -4,7 +4,6 @@
 
 using namespace geode::prelude;
 
-// Jump Hack -- keeps the player permanently "on ground" so it can always jump.
 class $modify(NHJumpHack, GJBaseGameLayer) {
     void update(float dt) {
         if (Config::get().jumpHack) {

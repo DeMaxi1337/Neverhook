@@ -4,7 +4,6 @@
 
 using namespace geode::prelude;
 
-// No Death Effect / No Respawn Flash.
 class $modify(NHPlayerObject, PlayerObject) {
     void playDeathEffect() {
         if (Config::get().noDeathEffect) return;

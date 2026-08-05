@@ -2,10 +2,10 @@
 #include "../Config.hpp"
 
 namespace nh {
-    // --- input state (set by the keyboard hook / on-screen control) ---
-    inline bool  faPressed     = false; // step key pressed this frame (non-repeat)
-    inline bool  faDown        = false; // step key currently held
-    inline float faHoldDelay   = 0.0f;  // time held before auto-repeat starts
-    inline int   faHoldAdvance = 0;     // auto-repeat tick counter
-    inline bool  faKeyWaiting  = false; // rebinding: waiting for next key
+
+    inline bool  faPressed     = false;
+    inline bool  faDown        = false;
+    inline float faHoldDelay   = 0.0f;
+    inline int   faHoldAdvance = 0;
+    inline bool  faKeyWaiting  = false;
 }

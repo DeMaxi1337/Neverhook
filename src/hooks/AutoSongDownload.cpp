@@ -4,8 +4,6 @@
 
 using namespace geode::prelude;
 
-// Automatically presses the song download button on a level page so the audio
-// is fetched without manual interaction.
 class $modify(NHAutoSongDownload, LevelInfoLayer) {
     void tryDownload() {
         if (!Config::get().autoSongDownload) return;

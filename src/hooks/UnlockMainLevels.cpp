@@ -4,7 +4,6 @@
 
 using namespace geode::prelude;
 
-// Removes the coin requirement that locks certain main levels.
 class $modify(NHUnlockMainLevels, GameLevelManager) {
     GJGameLevel* getMainLevel(int levelID, bool dontGetLevelString) {
         auto* level = GameLevelManager::getMainLevel(levelID, dontGetLevelString);

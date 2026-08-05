@@ -16,7 +16,7 @@ namespace {
         double frame = CCDirector::get()->getDeltaTime();
         if (frame <= 0.0) frame = 1.0 / 60.0;
         int passes = static_cast<int>(std::ceil(tps * frame));
-        passes = std::clamp(passes, 1, 2000); // guard against absurd input
+        passes = std::clamp(passes, 1, 2000);
         return passes;
     }
 }
@@ -25,8 +25,6 @@ class $modify(NHTpsLayer, GJBaseGameLayer) {
     double getModifiedDelta(float dt) {
         auto& c = Config::get();
 
-        // Frame advance drives the delta itself in FrameAdvance.cpp, so stay
-        // out of its way and let the game process the fed delta normally.
         if (c.frameAdvance)
             return GJBaseGameLayer::getModifiedDelta(dt);
         if (!c.tpsBypass || m_isEditor)

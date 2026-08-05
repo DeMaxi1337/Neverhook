@@ -1,6 +1,5 @@
 #pragma once
 
-
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DEFINE_MATH_OPERATORS
 #endif
@@ -15,9 +14,6 @@
 #include <unordered_map>
 #include <functional>
 
-
-// Global multiplier for every menu tween. Set from the About window's
-// "Animation Speed" control each frame (1.0 = default speed).
 inline float g_menuAnimSpeed = 1.f;
 
 static inline float fi_lerp( float current, float target, float alpha_60 ) {
@@ -35,7 +31,7 @@ class c_gui {
 public:
 
     float m_anim        = 0.f;
-    float m_fade        = 0.f;  // 0 = fully hidden, 1 = fully visible (fade in/out)
+    float m_fade        = 0.f;
     int   m_tab         = 0;
 
     int                              m_rage_subtab = 0;
@@ -75,8 +71,13 @@ public:
 
     bool toggle      ( const char* label, bool*  v );
     bool button      ( const char* label, ImVec2 size_arg = ImVec2( 0, 0 ) );
-    bool slider_float( const char* label, float* v, float v_min, float v_max, const char* format = "%.2f" );
+    bool slider_float( const char* label, float* v, float v_min, float v_max, const char* format = "%.2f", float width = 0.f );
     bool slider_int  ( const char* label, int*   v, int   v_min, int   v_max, const char* format = "%d"   );
+
+    bool key_cell   ( const char* id_str, const char* text, bool capturing, ImVec2 size_arg );
+    bool combo_cell ( const char* id_str, int* v, const char* const* items, int count, ImVec2 size_arg );
+    bool slider_cell( const char* id_str, float* v, float v_min, float v_max, ImVec2 size_arg, const char* format = "%.2f" );
+    bool icon_x_cell( const char* id_str, ImVec2 size_arg );
 
 };
 

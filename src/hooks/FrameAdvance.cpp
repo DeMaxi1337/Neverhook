@@ -7,12 +7,12 @@
 using namespace geode::prelude;
 
 namespace {
-    // GD advances physics at a fixed 240 ticks per second; one tick == 1/240 s.
+
     constexpr float kPhysicsTps = 240.0f;
 }
 
 class $modify(NHFrameStepper, GJBaseGameLayer) {
-    // Must wrap every other update hook so nothing re-runs the tick afterwards.
+
     static void onModify(auto& self) {
         (void)self.setHookPriorityPre("GJBaseGameLayer::update", Priority::First);
     }
@@ -55,7 +55,6 @@ class $modify(NHFrameStepper, GJBaseGameLayer) {
 
         nh::faPressed = false;
 
-        // One press -> exactly one physics tick; otherwise freeze the game.
         dt = shouldStep ? (1.0f / kPhysicsTps) : 0.0f;
         GJBaseGameLayer::update(dt);
     }

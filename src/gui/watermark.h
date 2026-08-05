@@ -243,9 +243,7 @@ inline void DrawWatermark()
     if (Vars::wmShowName) segs.push_back({ "Neverhook", true });
     if (Vars::wmShowFps)
     {
-        // io.Framerate is a heavily smoothed 60-frame average and lags badly
-        // (e.g. still reads 240 right after switching the FPS bypass to 480).
-        // Measure the real render rate ourselves over a short window instead.
+
         using clock = std::chrono::steady_clock;
         static clock::time_point s_last  = clock::now();
         static double s_window = 0.0;

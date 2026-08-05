@@ -30,9 +30,6 @@ namespace {
         }
     }
 
-    // Closest object placed before the startpos, with a small buffer so a
-    // portal sitting right on top of the startpos is ignored. Mirrors GDH's
-    // Smart Startpos getClosestObject behaviour.
     GameObject* nhClosest(std::vector<GameObject*> const& list, float x) {
         GameObject* result = nullptr;
         for (auto o : list) {
@@ -87,10 +84,7 @@ class $modify(NHSmartStartPos, PlayLayer) {
             if (auto o = nhClosest(size, x))    st->m_startMini = o->m_objectID == 101;
             if (auto o = nhClosest(mirror, x))  st->m_mirrorMode = o->m_objectID == 45;
             if (auto o = nhClosest(dual, x))    st->m_startDual = o->m_objectID == 286;
-            // Gravity is intentionally left untouched. In 2.2 gravity is very often
-            // set by invisible gravity triggers / orbs / pads that a portal-object
-            // scan cannot see, so guessing gravity from portals is unreliable and
-            // wrongly flips startpos entries. Gravity stays as the startpos/game sets it.
+
         }
     }
 };

@@ -6,8 +6,6 @@
 
 using namespace geode::prelude;
 
-// Reports the shopkeeper NPCs as unlocked so their shops open:
-//   11 - Scratch, 20 - Potbor, 34 - Diamond shopkeeper, 35 - Mechanic.
 class $modify(NHUnlockShops, GameManager) {
     bool getUGV(const char* key) {
         if (GameManager::getUGV(key)) return true;

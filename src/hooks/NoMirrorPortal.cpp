@@ -4,7 +4,6 @@
 
 using namespace geode::prelude;
 
-// No Mirror Portal.
 class $modify(NHNoMirror, GJBaseGameLayer) {
     void toggleFlipped(bool flip, bool noEffects) {
         if (Config::get().noMirrorPortal)

@@ -1,10 +1,6 @@
 #pragma once
 #include <Geode/Geode.hpp>
 
-// GD advances m_gameState.m_currentProgress by two units per physics tick,
-// whereas the conventional frame number (as shown by Mega Hack and TAS tools)
-// counts one per tick. Divide the raw progress by this to get that frame
-// number. Single source of truth so the conversion never drifts across files.
 inline constexpr int kProgressPerFrame = 2;
 
 struct Config {
@@ -39,6 +35,7 @@ struct Config {
     bool  showHitboxes          = false;
     bool  showHitboxesOnDeath   = false;
     bool  showTrajectory        = false;
+    bool  clickBetweenFrames    = false;
 
     bool  tpsBypass             = false;
     float tpsValue              = 240.0f;
@@ -89,10 +86,9 @@ struct Config {
     float autoclickerCps   = 10.0f;
     float autoclickerP2Cps = 10.0f;
 
-    // --- Macros ---
-    int   macroPlaybackAttempt   = 0;      // playback on this attempt (0 = instantly)
-    bool  macroIgnoreInputs      = false;  // drop human inputs during playback
-    bool  macroAutoPlayback      = false;  // auto-start playback after recording
+    int   macroPlaybackAttempt   = 0;
+    bool  macroIgnoreInputs      = false;
+    bool  macroAutoPlayback      = false;
 
     bool  noTransition   = false;
     bool  noPauseButton  = false;
@@ -126,7 +122,6 @@ struct Config {
     float keybindsX        = 0.012f;
     float keybindsY        = 0.045f;
 
-    // --- Mega Hack additions (batch) ---
     bool  hidePlayer        = false;
     bool  playerOnTop       = false;
     bool  noRobotFire       = false;
@@ -137,12 +132,10 @@ struct Config {
     bool  randomSeed        = false;
     int   randomSeedValue   = 0;
 
-    // --- About window ---
     bool  autoSave         = false;
-    int   menuScale        = 0;      // 0=Auto, 1=100%, 2=125%, 3=150%, 4=200%
+    int   menuScale        = 0;
     float menuAnimSpeed    = 1.0f;
 
-    // --- Ported level / bypass functions ---
     bool  noShader = false;
     bool  noPortalLightning = false;
     bool  hideLevelCompleteVfx = false;
@@ -155,6 +148,9 @@ struct Config {
     bool  unlockMainLevels = false;
     bool  unlockShops = false;
     bool  unlockVaults = false;
+
+    bool  endscreenStats   = true;
+    bool  endscreenPhrases = true;
 
     static Config& get() {
         static Config inst;

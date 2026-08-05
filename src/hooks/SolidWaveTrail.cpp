@@ -4,7 +4,6 @@
 
 using namespace geode::prelude;
 
-// Solid Wave Trail (draw side) -- force an opaque fill for the wave streak.
 class $modify(NHSolidWaveTrailDraw, cocos2d::CCDrawNode) {
     bool drawPolygon(CCPoint* verts, unsigned int count, const ccColor4F& fillColor,
                      float borderWidth, const ccColor4F& borderColor,

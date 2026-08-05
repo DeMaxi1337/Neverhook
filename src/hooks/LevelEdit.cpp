@@ -6,8 +6,6 @@
 
 using namespace geode::prelude;
 
-// Level Edit -- lets the pause menu edit/copy any level by temporarily
-// flagging it as an editor level.
 class $modify(NHLevelEditPauseLayer, PauseLayer) {
     void customSetup() {
         auto level = GJBaseGameLayer::get()->m_level;

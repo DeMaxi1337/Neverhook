@@ -34,9 +34,6 @@ namespace {
             track.samples++;
     }
 
-    // second order prediction
-    // position + velocity*t + 0.5*acceleration*t^2
-    // im not sure if this will help make the frames smoother, but why not?
     float projectAxis(float p0, float p1, float p2, float t, bool haveThree) {
         float velocity = p2 - p1;
         if (!haveThree)
@@ -71,7 +68,7 @@ namespace {
 
 class $modify(NHFrameExtrapolation, GJBaseGameLayer) {
     static void onModify(auto& self) {
-        // for tps bypass
+
         (void)self.setHookPriorityPre("GJBaseGameLayer::update", Priority::First);
     }
 
@@ -132,8 +129,6 @@ class $modify(NHFrameExtrapolation, GJBaseGameLayer) {
         if (per <= 0.0)
             return;
 
-        // m_extraDelta is the simulation time already buffered toward the next tick. 
-        // as a fraction of one tick it is exactly the phase to render.
         float progress = static_cast<float>(std::clamp(
             static_cast<double>(m_extraDelta) / per, 0.0, 1.0
         ));

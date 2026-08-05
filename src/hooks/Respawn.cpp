@@ -4,7 +4,6 @@
 
 using namespace geode::prelude;
 
-// Instant Restart / Custom Respawn timing.
 class $modify(NHRespawn, PlayLayer) {
     void destroyPlayer(PlayerObject* player, GameObject* object) {
         PlayLayer::destroyPlayer(player, object);

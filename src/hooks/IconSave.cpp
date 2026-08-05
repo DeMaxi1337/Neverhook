@@ -6,19 +6,6 @@
 
 using namespace geode::prelude;
 
-// ============================ Icon Bypass save ============================
-// GD reverts locked icons/colors/glow to default on load-time validation.
-// We persist the raw GameManager selection and re-apply it.
-//
-//  * Save  -> only when leaving the icon kit (GJGarageLayer::onBack).
-//  * Restore -> at MenuLayer::init (and GameManager::init as an early pass).
-//    GameManager::init alone is too early: GD re-validates cosmetics AFTER it
-//    and overwrites them, so the MenuLayer::init pass is what makes it stick.
-//
-// Accessors (get/set) are used, not raw m_player* fields -- those are
-// SeedValueRSV on current bindings and can't be serialized.
-// =========================================================================
-
 static void nhSaveCosmetics() {
     auto gm = GameManager::get();
     if (!gm) return;
@@ -64,7 +51,6 @@ static void nhRestoreCosmetics() {
     gm->setPlayerGlow(       m->getSavedValue<bool>("ic_glow",   gm->getPlayerGlow()));
 }
 
-// Early pass (usually overwritten by GD, kept as a cheap first attempt).
 class $modify(NHIconSaveGM, GameManager) {
     bool init() {
         if (!GameManager::init()) return false;
@@ -74,7 +60,6 @@ class $modify(NHIconSaveGM, GameManager) {
     }
 };
 
-// Reliable pass: runs after GD finished loading, so cosmetics stick.
 class $modify(NHIconSaveMenu, MenuLayer) {
     bool init() {
         if (!MenuLayer::init()) return false;
@@ -84,7 +69,6 @@ class $modify(NHIconSaveMenu, MenuLayer) {
     }
 };
 
-// Save when leaving the icon kit -- the moment the selection is finalized.
 class $modify(NHIconSaveGarage, GJGarageLayer) {
     void onBack(cocos2d::CCObject* sender) {
         if (Config::get().iconBypass)

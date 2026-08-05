@@ -23,7 +23,7 @@ class $modify(NHSpeedhackAudio, FMODAudioEngine) {
             masterGroup->setPitch(Config::get().speedhackValue);
             m_fields->applied = true;
         } else if (m_fields->applied) {
-            // reset pitch back to normal exactly once when disabled
+
             masterGroup->setPitch(1.0f);
             m_fields->applied = false;
         }

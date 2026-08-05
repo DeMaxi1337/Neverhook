@@ -7,8 +7,6 @@
 
 using namespace geode::prelude;
 
-// Collects every coin the moment the level (re)starts. Object IDs 142 (secret
-// coin) and 1329 (user coin) are the collectable coins.
 class $modify(NHAutoPickupCoins, PlayLayer) {
     struct Fields {
         std::vector<EffectGameObject*> coins;

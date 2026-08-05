@@ -9,9 +9,14 @@
 
 using namespace geode::prelude;
 
-// Defined in Trajectory.cpp -- true while the trajectory ghost is being
-// simulated. Its simulated deaths must never count as real noclip hits.
 bool nhTrajectoryIsSimulating();
+
+static bool g_nhNoclipEverOn    = false;
+static bool g_nhNoclipTurnedOff = false;
+
+bool nhNoclipStatsShouldShow() {
+    return g_nhNoclipEverOn && !g_nhNoclipTurnedOff;
+}
 
 class $modify(NHNoclipBGL, GJBaseGameLayer) {
     struct Fields {
@@ -43,6 +48,11 @@ class $modify(NHNoclipBGL, GJBaseGameLayer) {
 
     void nhPostUpdate() {
         auto f = m_fields.self();
+
+        if (Config::get().noclip)
+            g_nhNoclipEverOn = true;
+        else if (g_nhNoclipEverOn)
+            g_nhNoclipTurnedOff = true;
 
         if (!f->didDieLastTick && f->hasDiedThisTick) {
             f->totalDeaths++;
@@ -86,6 +96,8 @@ class $modify(NHNoclipBGL, GJBaseGameLayer) {
 
     void nhResetValues() {
         auto f = m_fields.self();
+        g_nhNoclipEverOn = false;
+        g_nhNoclipTurnedOff = false;
         f->hasDiedThisAttempt = false;
         f->timeInLevel = 0;
         f->hasDiedThisTick = false;
@@ -112,8 +124,7 @@ class $modify(NHNoclipPL, PlayLayer) {
     }
 
     void destroyPlayer(PlayerObject* p0, GameObject* p1) {
-        // Ignore deaths of the trajectory ghost -- it is simulated every frame
-        // and would otherwise inflate the noclip death/accuracy counters.
+
         if (nhTrajectoryIsSimulating())
             return PlayLayer::destroyPlayer(p0, p1);
 
@@ -123,9 +134,6 @@ class $modify(NHNoclipPL, PlayLayer) {
         if (base_cast<NHNoclipBGL*>(this)->nhShouldRegularDie(p0, p1))
             return PlayLayer::destroyPlayer(p0, p1);
 
-        // Noclip is intercepting a would-be death. Only score it while the
-        // attempt is actually running -- destroyPlayer calls during spawn/setup
-        // or right after selecting a StartPos are engine artifacts, not hits.
         if (!m_started || m_hasCompletedLevel)
             return;
 
