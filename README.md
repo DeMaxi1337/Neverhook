@@ -4,7 +4,7 @@
 
 # Neverhook
 
-Mod menu for Geometry Dash with QoF features
+Extension mod for Geometry Dash with QoF features
 
 <p>
   <a href="https://github.com/DeMaxi1337/Neverhook/releases">
@@ -35,13 +35,13 @@ Mod menu for Geometry Dash with QoF features
 
 ## Features
 
-- **Player:** Noclip, Show Hitboxes, Hitbox Multiplier
-- **Global:** Speedhack, FPS Unlock, TPS Bypass
-- **Macros:** Autoclicker (P1 / P2) *Macrobot in progress*
-- **Cosmetic:** Wave Trail controls, No Particles, No Glow
-- **Bypass:** Safe Mode, Instant Complete, Custom Respawn Time
+- **Player:** Frame Advance, Show Hitboxes, Hitbox Customization
+- **Global:** Display settings, FPS Unlock, TPS Unlock
+- **Macros:** TAS-bot for non-standard level
+- **Cosmetic:** Wave Trail, No Particles, No Glow
+- **Utility:** Safe Mode, Smart StartPos, Custom Respawn Time
 - **Creator:** No Object Limit, No Zoom Limit, Level Edit
-- **Lua scripts:** *In progress*
+- **Lua scripts:** LuaJIT system with isolated sandbox
 
 ## Download
 
@@ -58,7 +58,7 @@ Expect occasional crashes, UI glitches, or incomplete features. If something bre
 
 **spencer** [![Telegram](https://img.shields.io/badge/@burj7halifa-2CA5E0?logo=telegram&logoColor=white)](https://t.me/burj7halifa) — original GUI design (not a project contributor)
 
-**ninXout** [![GitHub](https://img.shields.io/badge/GitHub-2CA5E0?logo=github&logoColor=white)](https://github.com/ninXout) — Frame Advance function (borrowed code, not a project contributor)
+**ninXout** [![GitHub](https://img.shields.io/badge/GitHub-24292e?logo=github&logoColor=white)](https://github.com/ninXout) — Frame Advance function (borrowed code, not a project contributor)
 
 ## Support me on Boosty!
 
