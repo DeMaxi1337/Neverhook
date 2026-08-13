@@ -58,7 +58,7 @@ Expect occasional crashes, UI glitches, or incomplete features. If something bre
 
 **spencer** [![Telegram](https://img.shields.io/badge/@burj7halifa-2CA5E0?logo=telegram&logoColor=white)](https://t.me/burj7halifa) — original GUI design (not a project contributor)
 
-**ninXout** [![GitHub](https://img.shields.io/badge/GitHub-101411?logo=github&logoColor=white)](https://github.com/ninXout) — Frame Advance function (borrowed code, not a project contributor)
+**ninXout** [![GitHub](https://img.shields.io/badge/GitHub-a6a6a6?logo=github&logoColor=white)](https://github.com/ninXout) — Frame Advance function (borrowed code, not a project contributor)
 
 ## Support me on Boosty!
 
