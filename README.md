@@ -45,7 +45,7 @@ Extension mod for Geometry Dash with QoF features
 
 ## Download
 
-https://github.com/DeMaxi1337/Neverhook/releases/tag/v2.0.4-beta
+https://github.com/DeMaxi1337/Neverhook/releases/tag/v2.0.5-beta
 
 ## The project is under development!
 
