@@ -1,7 +1,17 @@
 #include "framework_widgets.h"
 #include "binds.h"
+#include <cmath>
 
 using namespace ImGui;
+
+namespace {
+    struct SmoothScrollState {
+        float current = 0.f;
+        float target  = 0.f;
+        bool  init    = false;
+    };
+    static std::unordered_map< ImGuiID, SmoothScrollState > s_smoothScrolls;
+}
 
 void c_gui::render_circle_for_horizontal_bar( ImVec2 pos, ImColor color, float alpha ) {
 
@@ -104,17 +114,23 @@ void c_gui::group_box( const char* name, ImVec2 size_arg ) {
 
     {
         const auto  title_sz = CalcTextSize( name );
-        const float bar_y0   = ( title_sz.y - 8.f ) * 0.5f;
+        const float bar_y0   = 2.f + ( title_sz.y - 8.f ) * 0.5f;
         GetWindowDrawList( )->AddRectFilled( pos + ImVec2( 3.f, bar_y0 ),
                                             pos + ImVec2( 6.f, bar_y0 + 8.f ),
                                             gui.accent_color.to_im_color( 0.7f ) );
     }
-    GetWindowDrawList( )->AddText( pos + ImVec2( 12, 0 ), GetColorU32( ImGuiCol_Text, 0.5f ), name );
+    GetWindowDrawList( )->AddText( pos + ImVec2( 12, 2.f ), GetColorU32( ImGuiCol_Text, 0.5f ), name );
 
-    SetCursorPos( ImVec2( 12, 21 ) );
-    PushStyleVar( ImGuiStyleVar_WindowPadding, { 0, 10 } );
+    SetCursorPos( ImVec2( 12, 26 ) );
+    PushStyleVar( ImGuiStyleVar_WindowPadding, { 0, 8 } );
+    PushStyleVar( ImGuiStyleVar_ScrollbarSize, 6.f );
+    PushStyleVar( ImGuiStyleVar_ScrollbarRounding, 12.f );
+    PushStyleColor( ImGuiCol_ScrollbarBg, ImVec4( 0.f, 0.f, 0.f, 0.15f ) );
+    PushStyleColor( ImGuiCol_ScrollbarGrab, gui.accent_color.to_vec4( 0.65f ) );
+    PushStyleColor( ImGuiCol_ScrollbarGrabHovered, gui.accent_color.to_vec4( 0.85f ) );
+    PushStyleColor( ImGuiCol_ScrollbarGrabActive, gui.accent_color.to_vec4( 1.00f ) );
 
-    BeginChild( name, { size_arg.x - 24, size_arg.y - 21 }, ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoScrollbar );
+    BeginChild( name, { size_arg.x - 24, size_arg.y - 32 }, ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoScrollWithMouse );
 
     BeginGroup( );
 
@@ -124,9 +140,49 @@ void c_gui::group_box( const char* name, ImVec2 size_arg ) {
 
 void c_gui::end_group_box( ) {
 
-    PopStyleVar( 3 );
+    PopStyleVar( 2 );
     EndGroup( );
+
+    auto inner = GetCurrentWindow( );
+    if ( inner ) {
+        auto& state = s_smoothScrolls[ inner->ID ];
+        if ( !state.init ) {
+            state.current = inner->Scroll.y;
+            state.target  = inner->Scroll.y;
+            state.init    = true;
+        }
+
+        const float maxScroll = inner->ScrollMax.y;
+
+        if ( IsWindowHovered( ImGuiHoveredFlags_RootAndChildWindows ) ) {
+            const float wheel = GetIO( ).MouseWheel;
+            if ( wheel != 0.0f ) {
+                state.target = ImClamp( state.target - wheel * 45.f, 0.0f, maxScroll );
+            }
+        } else {
+            state.target = ImClamp( state.target, 0.0f, maxScroll );
+        }
+
+        if ( std::abs( inner->Scroll.y - state.current ) > 2.0f && GetIO( ).MouseWheel == 0.0f ) {
+            state.target  = inner->Scroll.y;
+            state.current = inner->Scroll.y;
+        } else if ( maxScroll > 0.0f ) {
+            float dt = ImMin( GetIO( ).DeltaTime, 0.05f );
+            if ( dt <= 0.0f ) dt = 1.0f / 60.0f;
+            const float speed  = 12.0f;
+            const float factor = 1.0f - std::exp( -speed * dt );
+            state.current = ImLerp( state.current, state.target, factor );
+
+            if ( std::abs( state.current - state.target ) < 0.2f ) {
+                state.current = state.target;
+            }
+            SetScrollY( state.current );
+        }
+    }
+
     EndChild( );
+    PopStyleColor( 4 );
+    PopStyleVar( 3 );
     EndChild( );
 }
 
@@ -144,7 +200,8 @@ bool c_gui::toggle( const char* label, bool* v ) {
 
     const float pill_w = 30.f;
     const float pill_h = 16.f;
-    const float row_w  = GetContentRegionAvail( ).x;
+    const float scroll_reserve = (window->ScrollMax.y > 0.0f || window->ScrollbarY) ? 0.f : 10.f;
+    const float row_w  = GetContentRegionAvail( ).x - scroll_reserve;
     const float row_h  = ImMax( label_size.y, pill_h );
 
     ImRect bb( pos, pos + ImVec2( row_w, row_h ) );
@@ -236,7 +293,8 @@ bool c_gui::button( const char* label, ImVec2 size_arg ) {
     draw->AddRectFilled( bb.Min, bb.Max, ImColor( col_v ),               4.f );
     draw->AddRect      ( bb.Min, bb.Max, gui.border.to_im_color( ),      4.f );
 
-    draw->AddText( bb.GetCenter( ) - label_size * 0.5f,
+    draw->AddText( ImVec2( bb.GetCenter( ).x - label_size.x * 0.5f,
+                           bb.GetCenter( ).y - label_size.y * 0.5f + 1.f ),
                    GetColorU32( ImGuiCol_Text ), label, label_end );
 
     return pressed;
@@ -262,7 +320,8 @@ static bool _slider_scalar( const char* label, ImGuiDataType data_type, void* p_
     const auto label_size = CalcTextSize( label,     0, true );
     const auto value_size = CalcTextSize( value_buf, 0, false );
 
-    const float row_w  = ( width > 0.f ) ? width : GetContentRegionAvail( ).x;
+    const float scroll_reserve = (window->ScrollMax.y > 0.0f || window->ScrollbarY) ? 0.f : 10.f;
+    const float row_w  = ( width > 0.f ) ? width : (GetContentRegionAvail( ).x - scroll_reserve);
     const float text_h = ImMax( label_size.y, value_size.y );
     const float gap    = 4.f;
     const float bar_h  = 4.f;
@@ -278,11 +337,14 @@ static bool _slider_scalar( const char* label, ImGuiDataType data_type, void* p_
     const ImRect bar( ImVec2( pos.x,    pos.y + text_h + gap ),
                       ImVec2( bb.Max.x, pos.y + text_h + gap + bar_h ) );
 
+    const ImRect interact_bb( ImVec2( pos.x,    bar.Min.y - 6.f ),
+                              ImVec2( bb.Max.x, bar.Max.y + 6.f ) );
+
     bool s_hovered, s_held;
-    ButtonBehavior( bar, id, &s_hovered, &s_held );
+    ButtonBehavior( interact_bb, id, &s_hovered, &s_held );
 
     ImRect grab_bb;
-    bool changed = SliderBehavior( bar, id, data_type, p_v, p_min, p_max, format,
+    bool changed = SliderBehavior( interact_bb, id, data_type, p_v, p_min, p_max, format,
                                    ImGuiSliderFlags_None, &grab_bb );
     if ( changed )
         DataTypeFormatString( value_buf, IM_ARRAYSIZE( value_buf ), data_type, p_v, format );

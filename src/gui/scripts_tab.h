@@ -8,6 +8,8 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "hashes.hpp"
+#include "vars.h"
+#include "blur.hpp"
 #include "../lua/LuaEngine.hpp"
 
 #include <Geode/Geode.hpp>
@@ -17,7 +19,10 @@
 
 using namespace ImGui;
 
-inline const char* kNhDocsUrl = "https://neverhook.gitbook.io/lua-api";
+inline const char* kNhDocsUrl      = "https://demaxi.gitbook.io/neverhook-lua-api";
+inline const char* kNhDocsStartUrl = "https://demaxi.gitbook.io/neverhook-lua-api/getting-started";
+inline const char* kNhDocsNodesUrl = "https://demaxi.gitbook.io/neverhook-lua-api/api/nodes";
+inline const char* kNhDocsHooksUrl = "https://demaxi.gitbook.io/neverhook-lua-api/api/hooks";
 
 inline bool  g_scriptsListOpen = true;
 inline bool  g_scriptsConsole  = false;
@@ -171,8 +176,15 @@ inline void DrawScriptConsoleWindow() {
         const ImVec2 pos    = window->Pos;
         const ImVec2 size   = window->Size;
 
+        const bool  consoleBlur = Vars::guiBlur && nh::blur::available();
+        const float consoleMul  = consoleBlur ? 0.78f : 1.f;
+
+        if (consoleBlur)
+            nh::blur::submit(GetBackgroundDrawList(), pos, pos + size, 6.f,
+                             Vars::guiBlurStrength, g_scriptsConsoleAnim);
+
         draw->AddRectFilled(pos, pos + size,
-            ImColor(0.019f, 0.035f, 0.062f, g_scriptsConsoleAnim), 6.f);
+            ImColor(0.019f, 0.035f, 0.062f, g_scriptsConsoleAnim * consoleMul), 6.f);
         draw->AddRect(pos, pos + size, gui.border.to_im_color(), 6.f);
 
         const float barH = 34.f;
@@ -271,30 +283,39 @@ inline void DrawScriptsTab() {
         g_scriptsScanned = true;
     }
 
-    const float avail = GetContentRegionAvail().x;
+    Dummy(ImVec2(0.f, 3.f));
 
-    PushItemWidth(avail - 210.f);
+    const float avail   = GetContentRegionAvail().x;
+    const float spacing = 6.f;
+    const float toolH   = 26.f;
+    const float toolsW  = 30.f + 30.f + 110.f + spacing * 3.f;
+
+    PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.f, 4.f));
+
+    PushItemWidth(avail - toolsW);
     InputTextWithHint("##scriptsearch", ICON_FA_SEARCH "  Search", g_scriptSearch,
                       IM_ARRAYSIZE(g_scriptSearch));
     PopItemWidth();
 
-    SameLine();
-    if (gui.button(ICON_FA_SYNC, ImVec2(30.f, 0.f)))
+    SameLine(0.f, spacing);
+    if (gui.button(ICON_FA_SYNC, ImVec2(30.f, toolH)))
         mgr.refresh();
 
-    SameLine();
-    if (gui.button(ICON_FA_TERMINAL, ImVec2(30.f, 0.f)))
+    SameLine(0.f, spacing);
+    if (gui.button(ICON_FA_TERMINAL, ImVec2(30.f, toolH)))
         g_scriptsConsole = !g_scriptsConsole;
 
-    SameLine();
+    SameLine(0.f, spacing);
     PushStyleColor(ImGuiCol_Button,        gui.accent_color.to_vec4(0.85f));
     PushStyleColor(ImGuiCol_ButtonHovered, gui.accent_color.to_vec4(1.0f));
     PushStyleColor(ImGuiCol_ButtonActive,  gui.accent_color.to_vec4(0.7f));
     PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.5f, 0.5f));
-    if (Button(ICON_FA_PLUS " Create", ImVec2(110.f, 0.f)))
+    if (Button(ICON_FA_PLUS " Create", ImVec2(110.f, toolH)))
         OpenPopup("##createscript");
     PopStyleVar();
     PopStyleColor(3);
+
+    PopStyleVar();
 
     PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10.f, 10.f));
     if (BeginPopup("##createscript")) {
@@ -315,7 +336,7 @@ inline void DrawScriptsTab() {
     }
     PopStyleVar();
 
-    Spacing();
+    Dummy(ImVec2(0.f, 10.f));
 
     {
         const std::string header = std::string(g_scriptsListOpen ? ICON_FA_ANGLE_DOWN
@@ -330,7 +351,7 @@ inline void DrawScriptsTab() {
     const float footerH = 30.f;
 
     BeginChild("##scriptlist",
-               ImVec2(0.f, GetContentRegionAvail().y - footerH - 8.f),
+               ImVec2(0.f, GetContentRegionAvail().y - footerH - GetStyle().ItemSpacing.y * 2.f),
                false, ImGuiWindowFlags_NoScrollWithMouse);
 
     if (g_scriptsListOpen) {
@@ -372,11 +393,20 @@ inline void DrawScriptsTab() {
 
     EndChild();
 
-    Separator();
+    {
+        ImDrawList* list = GetWindowDrawList();
+        const float padX = GetStyle().WindowPadding.x;
+        const float x0   = GetWindowPos().x + padX;
+        const float x1   = GetWindowPos().x + GetWindowWidth() - padX;
+        const float y    = GetCursorScreenPos().y;
 
-    const float linkW   = 122.f;
-    const float spacing = GetStyle().ItemSpacing.x;
-    const float totalW  = linkW * 2.f + spacing;
+        list->AddLine(ImVec2(x0, y), ImVec2(x1, y), gui.border.to_im_color(2.5f));
+    }
+
+    Dummy(ImVec2(0.f, 8.f));
+
+    const float linkW  = 122.f;
+    const float totalW = linkW * 2.f + spacing;
 
     SetCursorPosX((GetWindowWidth() - totalW) * 0.5f);
 
@@ -384,7 +414,19 @@ inline void DrawScriptsTab() {
     PushStyleColor(ImGuiCol_Text, gui.text_disabled.to_vec4());
 
     if (Selectable("Documentation", false, 0, ImVec2(linkW, 0.f)))
-        geode::utils::web::openLinkInBrowser(kNhDocsUrl);
+        geode::utils::web::openLinkInBrowser(kNhDocsStartUrl);
+
+    if (BeginPopupContextItem("##docsmenu")) {
+        if (Selectable("Getting started"))
+            geode::utils::web::openLinkInBrowser(kNhDocsStartUrl);
+        if (Selectable("Nodes"))
+            geode::utils::web::openLinkInBrowser(kNhDocsNodesUrl);
+        if (Selectable("Hooks"))
+            geode::utils::web::openLinkInBrowser(kNhDocsHooksUrl);
+        if (Selectable("Full reference"))
+            geode::utils::web::openLinkInBrowser(kNhDocsUrl);
+        EndPopup();
+    }
 
     SameLine();
     if (Selectable("Scripts folder", false, 0, ImVec2(linkW, 0.f)))

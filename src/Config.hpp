@@ -133,6 +133,8 @@ struct Config {
     int   randomSeedValue   = 0;
 
     bool  autoSave         = false;
+    bool  guiBlur          = true;
+    float guiBlurStrength  = 8.0f;
     int   menuScale        = 0;
     float menuAnimSpeed    = 1.0f;
 

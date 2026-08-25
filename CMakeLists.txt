@@ -24,11 +24,20 @@ endif()
 
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
-# --- ImGui setup (identical to EclipseMenu's working combo) ---
-# 1) ImGui source as an INTERFACE lib
+# --- ImGui setup ---
+# Use upstream Dear ImGui instead of the removed/private EclipseMenu/imgui repo.
+# IMPORTANT: do NOT put EclipseMenu's src/modules/gui/imgui here; that is not Dear ImGui.
 add_library(imgui INTERFACE)
-CPMAddPackage("gh:EclipseMenu/imgui#8cf1bfc")
-target_include_directories(imgui INTERFACE ${imgui_SOURCE_DIR})
+CPMAddPackage(
+    NAME imgui
+    GITHUB_REPOSITORY ocornut/imgui
+    GIT_TAG docking
+    DOWNLOAD_ONLY YES
+)
+target_include_directories(imgui INTERFACE
+    ${imgui_SOURCE_DIR}
+    ${imgui_SOURCE_DIR}/misc/cpp
+)
 target_sources(imgui INTERFACE
     ${imgui_SOURCE_DIR}/imgui.cpp
     ${imgui_SOURCE_DIR}/imgui_widgets.cpp
@@ -39,8 +48,8 @@ target_sources(imgui INTERFACE
 )
 set(HAS_IMGUI ON)
 
-# 2) cocos/Geode backend -- the prevter fork (NOT matcool), pinned like EclipseMenu
-CPMAddPackage("gh:prevter/gd-imgui-cocos#e66d02b")
+# 2) cocos/Geode backend. e66d02b is no longer available; geode is the default branch.
+CPMAddPackage("gh:prevter/gd-imgui-cocos#geode")
 
 # -- LuaJIT ------------------------------------------------------------
 # LuaJIT ships a Makefile build only, so the sources are fetched plain and

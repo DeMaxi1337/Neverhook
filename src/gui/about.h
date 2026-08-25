@@ -10,6 +10,7 @@
 #include "hashes.hpp"
 #include "vars.h"
 #include "watermark.h"
+#include "blur.hpp"
 
 #include <Geode/utils/web.hpp>
 
@@ -31,9 +32,12 @@ inline void DrawAboutWindow()
         ImGuiCond_Appearing, ImVec2( 0.5f, 0.5f ) );
     SetNextWindowSize( win_sz );
 
+    const bool  aboutBlur = g_aboutOpen && Vars::guiBlur && nh::blur::available();
+    const float aboutMul  = aboutBlur ? 0.50f : 1.f;
+
     PushStyleVar( ImGuiStyleVar_Alpha, g_aboutAnim );
     PushStyleVar( ImGuiStyleVar_WindowPadding, ImVec2( 0, 0 ) );
-    SetNextWindowBgAlpha( g_aboutAnim );
+    SetNextWindowBgAlpha( g_aboutAnim * aboutMul );
 
     Begin( "##NeverhookAbout", nullptr,
         ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings |
@@ -44,8 +48,12 @@ inline void DrawAboutWindow()
         const ImVec2 pos    = window->Pos;
         const ImVec2 size   = window->Size;
 
+        if ( aboutBlur )
+            nh::blur::submit( GetBackgroundDrawList(), pos, pos + size, 6.f,
+                Vars::guiBlurStrength, g_aboutAnim );
+
         draw->AddRectFilled( pos, pos + size,
-            ImColor( 0.019f, 0.035f, 0.062f, g_aboutAnim ), 6.f );
+            ImColor( 0.019f, 0.035f, 0.062f, g_aboutAnim * aboutMul ), 6.f );
         draw->AddRect( pos, pos + size, gui.border.to_im_color(), 6.f );
 
         const float bar_h = 34.f;
@@ -116,6 +124,13 @@ inline void DrawAboutWindow()
         Spacing();
 
         gui.toggle( "Auto-Save", &Vars::autoSave );
+
+        Spacing();
+
+        gui.toggle( "Enable Blur", &Vars::guiBlur );
+
+        if ( Vars::guiBlur )
+            gui.slider_float( "Blur Strength", &Vars::guiBlurStrength, 1.0f, 8.0f, "%.1f" );
 
         Spacing();
         Separator();

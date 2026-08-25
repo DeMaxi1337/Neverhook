@@ -144,6 +144,8 @@ namespace Vars {
     inline int&   randomSeedValue   = Config::get().randomSeedValue;
 
     inline bool&  autoSave      = Config::get().autoSave;
+    inline bool&  guiBlur       = Config::get().guiBlur;
+    inline float& guiBlurStrength = Config::get().guiBlurStrength;
     inline int&   menuScale     = Config::get().menuScale;
     inline float& menuAnimSpeed = Config::get().menuAnimSpeed;
 

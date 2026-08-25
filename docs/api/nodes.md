@@ -122,9 +122,6 @@ Easing names: `linear`, `in`, `out`, `in_out`, `sine_in`, `sine_out`,
 sprites and returns a handle for the shadow, so you can fade or recolour it
 later. Defaults are `dx = 3`, `dy = -3`, `opacity = 120`, `spread = 1.05`.
 
-See `examples/companion.md` for a companion that levitates next to the player
-with a shadow.
-
 ## Where a custom node may live
 
 The game keeps most level graphics inside sprite batches. A batch only accepts

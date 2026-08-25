@@ -9,6 +9,7 @@
 #include "imgui_internal.h"
 #include "hashes.hpp"
 #include "vars.h"
+#include "blur.hpp"
 #include <Geode/Geode.hpp>
 #include <cmath>
 
@@ -302,12 +303,15 @@ public:
         }
         SetNextWindowSize(ImVec2(240.f, 0.f), ImGuiCond_Always);
 
+        const bool  bindBlur  = Vars::guiBlur && nh::blur::available();
+        const float bindAlpha = bindBlur ? 0.82f : 0.99f;
+
         PushStyleVar(ImGuiStyleVar_Alpha, gui.m_fade);
         PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
         PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(10.f, 10.f));
-        PushStyleColor(ImGuiCol_WindowBg,      (ImU32)ImColor(0.018f, 0.030f, 0.058f, 0.99f));
-        PushStyleColor(ImGuiCol_TitleBg,       (ImU32)ImColor(0.018f, 0.030f, 0.058f, 0.99f));
-        PushStyleColor(ImGuiCol_TitleBgActive, (ImU32)ImColor(0.018f, 0.030f, 0.058f, 0.99f));
+        PushStyleColor(ImGuiCol_WindowBg,      (ImU32)ImColor(0.018f, 0.030f, 0.058f, bindAlpha));
+        PushStyleColor(ImGuiCol_TitleBg,       (ImU32)ImColor(0.018f, 0.030f, 0.058f, bindAlpha));
+        PushStyleColor(ImGuiCol_TitleBgActive, (ImU32)ImColor(0.018f, 0.030f, 0.058f, bindAlpha));
         PushStyleColor(ImGuiCol_Border,        (ImU32)ImColor(1.f, 1.f, 1.f, 0.08f));
 
         bool open = m_bindOpen;
@@ -317,6 +321,13 @@ public:
                   ImGuiWindowFlags_NoScrollbar |
                   ImGuiWindowFlags_NoSavedSettings)) {
             m_bindOpen = open;
+
+            if (bindBlur) {
+                ImGuiWindow* bwindow = GetCurrentWindow();
+                nh::blur::submit(GetBackgroundDrawList(), bwindow->Pos,
+                                 bwindow->Pos + bwindow->Size, 6.f,
+                                 Vars::guiBlurStrength, gui.m_fade);
+            }
 
             if (fi->binds.empty()) addBind(*fi);
             int& sel = m_selectedBind[m_bindFeature];
@@ -496,10 +507,13 @@ public:
         SetNextWindowSize(ImVec2(880.f, m_hkAnimH), ImGuiCond_Always);
         SetNextWindowPos (ImVec2(170.f,  70.f),     ImGuiCond_FirstUseEver);
 
+        const bool  hkBlur = Vars::guiBlur && nh::blur::available();
+        const float hkMul  = hkBlur ? 0.80f : 1.f;
+
         PushStyleVar(ImGuiStyleVar_Alpha,          fade);
         PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
         PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(0.f, 0.f));
-        PushStyleColor(ImGuiCol_WindowBg, (ImU32)ImColor(0.012f, 0.020f, 0.045f, 1.f));
+        PushStyleColor(ImGuiCol_WindowBg, (ImU32)ImColor(0.012f, 0.020f, 0.045f, hkMul));
         PushStyleColor(ImGuiCol_Border,   (ImU32)gui.border.to_im_color(2.5f));
 
         if (Begin("##nhhotkeys", nullptr,
@@ -510,6 +524,10 @@ public:
             const ImVec2 wpos   = window->Pos;
             const ImVec2 wsize  = window->Size;
             const float  hdr_h  = 40.f;
+
+            if (hkBlur)
+                nh::blur::submit(GetBackgroundDrawList(), wpos, wpos + wsize, 6.f,
+                                 Vars::guiBlurStrength, fade);
 
             draw->AddRectFilled(wpos, ImVec2(wpos.x + wsize.x, wpos.y + hdr_h),
                                 gui.group_box_bg.to_im_color(), 6.f, ImDrawFlags_RoundCornersTop);
