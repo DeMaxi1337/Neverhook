@@ -37,10 +37,8 @@ void sync(bool force) {
     const bool on = Config::get().clickBetweenFrames;
     const int  state = on ? 1 : 0;
 
-    if (!force && state == g_lastApplied) {
-        applyToLayer(GJBaseGameLayer::get());
+    if (!force && state == g_lastApplied)
         return;
-    }
     g_lastApplied = state;
 
     if (Mod* mod = cbfMod())
@@ -52,6 +50,11 @@ void sync(bool force) {
 }
 
 class $modify(NHClickBetweenFrames, GJBaseGameLayer) {
+    void resetLevelVariables() {
+        GJBaseGameLayer::resetLevelVariables();
+        nh::cbf::applyToLayer(this);
+    }
+
     void update(float dt) {
         GJBaseGameLayer::update(dt);
         nh::cbf::sync(false);

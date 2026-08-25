@@ -20,7 +20,7 @@ class $modify(NHAutoclicker, GJBaseGameLayer) {
 
         if (c.autoclicker && !paused && c.autoclickerCps > 0.f) {
             float interval = 1.0f / c.autoclickerCps / 2.0f;
-            m_fields->timeP1 += dt;
+            m_fields->timeP1 = std::min(m_fields->timeP1 + dt, (double)interval * 4.0);
             while (m_fields->timeP1 >= interval) {
                 m_fields->stateP1 = !m_fields->stateP1;
                 m_fields->timeP1 -= interval;
@@ -30,7 +30,7 @@ class $modify(NHAutoclicker, GJBaseGameLayer) {
 
         if (c.autoclickerP2 && !paused && c.autoclickerP2Cps > 0.f) {
             float interval = 1.0f / c.autoclickerP2Cps / 2.0f;
-            m_fields->timeP2 += dt;
+            m_fields->timeP2 = std::min(m_fields->timeP2 + dt, (double)interval * 4.0);
             while (m_fields->timeP2 >= interval) {
                 m_fields->stateP2 = !m_fields->stateP2;
                 m_fields->timeP2 -= interval;

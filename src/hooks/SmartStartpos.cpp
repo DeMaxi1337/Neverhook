@@ -44,47 +44,61 @@ class $modify(NHSmartStartPos, PlayLayer) {
     void createObjectsFromSetupFinished() {
         PlayLayer::createObjectsFromSetupFinished();
 
-        if (!Config::get().smartStartpos) return;
+        if (!Config::get().smartStartpos || !m_objects) return;
 
         std::vector<StartPosObject*> starts;
-        std::vector<GameObject*> speed, mode, size, mirror, dual, gravity;
+        std::vector<GameObject*> portals;
 
         for (auto obj : CCArrayExt<GameObject*>(m_objects)) {
             if (!obj) continue;
             if (auto sp = typeinfo_cast<StartPosObject*>(obj)) {
                 starts.push_back(sp);
-                continue;
-            }
-            switch (obj->m_objectID) {
-            case 200: case 201: case 202: case 203: case 1334: speed.push_back(obj); break;
-            case 12: case 13: case 47: case 111: case 660: case 745: case 1331: case 1933: mode.push_back(obj); break;
-            case 99:  case 101: size.push_back(obj); break;
-            case 45:  case 46:  mirror.push_back(obj); break;
-            case 286: case 287: dual.push_back(obj); break;
-            case 9:   case 10:  case 11: gravity.push_back(obj); break;
-            default: break;
+            } else {
+                switch (obj->m_objectID) {
+                case 200: case 201: case 202: case 203: case 1334:
+                case 12: case 13: case 47: case 111: case 660: case 745: case 1331: case 1933:
+                case 99: case 101:
+                case 45: case 46:
+                case 286: case 287:
+                    portals.push_back(obj);
+                    break;
+                default: break;
+                }
             }
         }
 
-        auto cmp = [](GameObject* a, GameObject* b) { return a->m_positionX < b->m_positionX; };
-        std::sort(speed.begin(), speed.end(), cmp);
-        std::sort(mode.begin(), mode.end(), cmp);
-        std::sort(size.begin(), size.end(), cmp);
-        std::sort(mirror.begin(), mirror.end(), cmp);
-        std::sort(dual.begin(), dual.end(), cmp);
-        std::sort(gravity.begin(), gravity.end(), cmp);
+        if (starts.empty() || portals.empty()) return;
+
+        std::sort(portals.begin(), portals.end(), [](GameObject* a, GameObject* b) {
+            return a->m_positionX < b->m_positionX;
+        });
 
         for (auto sp : starts) {
             auto st = sp->m_startSettings;
             if (!st) continue;
             float x = sp->m_positionX;
 
-            if (auto o = nhClosest(speed, x))   st->m_startSpeed = nhStartSpeed(o->m_objectID);
-            if (auto o = nhClosest(mode, x))    st->m_startMode = nhStartMode(o->m_objectID);
-            if (auto o = nhClosest(size, x))    st->m_startMini = o->m_objectID == 101;
-            if (auto o = nhClosest(mirror, x))  st->m_mirrorMode = o->m_objectID == 45;
-            if (auto o = nhClosest(dual, x))    st->m_startDual = o->m_objectID == 286;
+            GameObject* lastSpeed = nullptr;
+            GameObject* lastMode = nullptr;
+            GameObject* lastSize = nullptr;
+            GameObject* lastMirror = nullptr;
+            GameObject* lastDual = nullptr;
 
+            for (auto o : portals) {
+                if (o->m_positionX - 10.f > x) break;
+                int id = o->m_objectID;
+                if (id == 200 || id == 201 || id == 202 || id == 203 || id == 1334) lastSpeed = o;
+                else if (id == 12 || id == 13 || id == 47 || id == 111 || id == 660 || id == 745 || id == 1331 || id == 1933) lastMode = o;
+                else if (id == 99 || id == 101) lastSize = o;
+                else if (id == 45 || id == 46) lastMirror = o;
+                else if (id == 286 || id == 287) lastDual = o;
+            }
+
+            if (lastSpeed)  st->m_startSpeed = nhStartSpeed(lastSpeed->m_objectID);
+            if (lastMode)   st->m_startMode = nhStartMode(lastMode->m_objectID);
+            if (lastSize)   st->m_startMini = (lastSize->m_objectID == 101);
+            if (lastMirror) st->m_mirrorMode = (lastMirror->m_objectID == 45);
+            if (lastDual)   st->m_startDual = (lastDual->m_objectID == 286);
         }
     }
 };

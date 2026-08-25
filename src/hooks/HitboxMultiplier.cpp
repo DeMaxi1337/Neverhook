@@ -8,17 +8,20 @@ class $modify(NHHitboxMultiplier, GameObject) {
     cocos2d::CCRect getObjectRect(float p0, float p1) {
         auto& c = Config::get();
         if (c.hitboxMultiplier) {
-            if (typeinfo_cast<PlayerObject*>(this)) {
-                p0 *= c.hitboxMultPlayer;
-                p1 *= c.hitboxMultPlayer;
-            } else if (m_objectType == GameObjectType::Solid
-                    || m_objectType == GameObjectType::Slope) {
+            if (m_objectType == GameObjectType::Solid
+             || m_objectType == GameObjectType::Slope) {
                 p0 *= c.hitboxMultSolid;
                 p1 *= c.hitboxMultSolid;
             } else if (m_objectType == GameObjectType::Hazard
                     || m_objectType == GameObjectType::AnimatedHazard) {
                 p0 *= c.hitboxMultHazard;
                 p1 *= c.hitboxMultHazard;
+            } else if (auto pl = PlayLayer::get()) {
+                if (this == static_cast<GameObject*>(pl->m_player1)
+                 || (pl->m_player2 && this == static_cast<GameObject*>(pl->m_player2))) {
+                    p0 *= c.hitboxMultPlayer;
+                    p1 *= c.hitboxMultPlayer;
+                }
             }
         }
         return GameObject::getObjectRect(p0, p1);
