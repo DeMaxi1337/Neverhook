@@ -35,7 +35,7 @@ public:
     int   m_tab         = 0;
 
     int                              m_rage_subtab = 0;
-    std::vector< const char* >       rage_subtabs  = { "General", "Edit" }; // "Anti aim", "Subtab"
+    std::vector< const char* >       rage_subtabs  = { "General", "Edit" };
 
     color_t accent_color   = { 0.3f,  0.49f, 1.f,   1.f };
 

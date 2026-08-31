@@ -8,6 +8,7 @@
 
 #include "imgui.h"
 #include "imgui_internal.h"
+#include <imgui-cocos.hpp>
 
 #include "hashes.hpp"
 #include "bytes.hpp"
@@ -15,6 +16,7 @@
 #include "vars.h"
 #include "hooks.h"
 #include "watermark.h"
+#include "StatusOverlay.h"
 #include "about.h"
 #include "binds.h"
 #include "scripts_tab.h"
@@ -137,7 +139,6 @@ static void DrawFeatureSearchResults(const char* q) {
     {
         int pMatches = 0;
         if (MatchesFeatureQuery("Noclip", q)) pMatches++;
-        if (MatchesFeatureQuery("Noclip Hitsound", q)) pMatches++;
         if (MatchesFeatureQuery("Noclip Tint", q)) pMatches++;
         if (MatchesFeatureQuery("No Death Effect", q)) pMatches++;
         if (MatchesFeatureQuery("No Respawn Flash", q)) pMatches++;
@@ -145,7 +146,7 @@ static void DrawFeatureSearchResults(const char* q) {
         if (MatchesFeatureQuery("Random Seed", q)) pMatches++;
         if (MatchesFeatureQuery("Show Hitboxes", q)) pMatches++;
         if (MatchesFeatureQuery("Show On Death", q)) pMatches++;
-        if (MatchesFeatureQuery("Trajectory Prediction", q)) pMatches++;
+        if (MatchesFeatureQuery("Show Trajectory (WIP)", q)) pMatches++;
         if (MatchesFeatureQuery("Click Between Frames", q)) pMatches++;
         if (MatchesFeatureQuery("Hitbox Multiplier", q)) pMatches++;
         if (MatchesFeatureQuery("Instant Complete", q)) pMatches++;
@@ -164,11 +165,6 @@ static void DrawFeatureSearchResults(const char* q) {
             const float boxH = pMatches * 26.f + 38.f;
             gui.group_box(ICON_FA_USER " Player", ImVec2(GetWindowWidth() - 14.f, boxH)); {
                 if (MatchesFeatureQuery("Noclip", q)) gui.toggle("Noclip", &Vars::noclip);
-                if (MatchesFeatureQuery("Noclip Hitsound", q)) {
-                    gui.toggle("Noclip Hitsound", &Vars::noclipHitsound);
-                    if (Vars::noclipHitsound)
-                        gui.slider_float("Hitsound Volume", &Vars::noclipHitsoundVolume, 0.f, 200.f, "%.0f%%");
-                }
                 if (MatchesFeatureQuery("Noclip Tint", q)) {
                     gui.toggle("Noclip Tint", &Vars::noclipTint);
                     if (Vars::noclipTint) {
@@ -187,7 +183,7 @@ static void DrawFeatureSearchResults(const char* q) {
                 }
                 if (MatchesFeatureQuery("Show Hitboxes", q)) gui.toggle("Show Hitboxes", &Vars::showHitboxes);
                 if (MatchesFeatureQuery("Show On Death", q)) gui.toggle("Show On Death", &Vars::showHitboxesOnDeath);
-                if (MatchesFeatureQuery("Trajectory Prediction", q)) gui.toggle("Trajectory Prediction", &Vars::showTrajectory);
+                if (MatchesFeatureQuery("Show Trajectory (WIP)", q)) gui.toggle("Show Trajectory (WIP)", &Vars::showTrajectory);
                 if (MatchesFeatureQuery("Click Between Frames", q)) gui.toggle("Click Between Frames", &Vars::clickBetweenFrames);
                 if (MatchesFeatureQuery("Hitbox Multiplier", q)) {
                     gui.toggle("Hitbox Multiplier", &Vars::hitboxMultiplier);
@@ -492,6 +488,14 @@ void DrawFrameWorkGUI()
 
     ImGui::Begin("##Neverhook", NULL, ImGuiWindowFlags_NoDecoration);
     {
+        if (ImGui::IsKeyPressed(ImGuiKey_Escape, false) || 
+            ImGui::IsKeyPressed(ImGuiKey_Insert, false) || 
+            (ImGui::IsKeyPressed(ImGuiKey_Tab, false) && !ImGui::GetIO().WantTextInput)) {
+            Vars::menuOpen = false;
+            ImGui::ClearActiveID();
+            ImGui::SetWindowFocus(nullptr);
+        }
+
         auto window = GetCurrentWindow();
         auto draw = window->DrawList;
         auto pos = window->Pos;
@@ -540,32 +544,39 @@ void DrawFrameWorkGUI()
         BeginChild("##tabs", ImVec2(150, size.y - 120));
 
         gui.group_title("Aimbot");
-        if (gui.tab(ICON_FA_CROSSHAIRS, "Player", gui.m_tab == 0) && gui.m_tab != 0)
-            gui.m_tab = 0, gui.m_anim = 0.f;
+        if (gui.tab(ICON_FA_CROSSHAIRS, "Player", gui.m_tab == 0 && g_featureSearch[0] == '\0')) {
+            g_featureSearch[0] = '\0'; ImGui::ClearActiveID(); gui.m_tab = 0; gui.m_anim = 0.f;
+        }
 
-        if (gui.tab(ICON_FA_GHOST, "Global", gui.m_tab == 1) && gui.m_tab != 1)
-            gui.m_tab = 1, gui.m_anim = 0.f;
+        if (gui.tab(ICON_FA_GHOST, "Global", gui.m_tab == 1 && g_featureSearch[0] == '\0')) {
+            g_featureSearch[0] = '\0'; ImGui::ClearActiveID(); gui.m_tab = 1; gui.m_anim = 0.f;
+        }
 
-        if (gui.tab(ICON_FA_MOUSE, "Macros", gui.m_tab == 2) && gui.m_tab != 2)
-            gui.m_tab = 2, gui.m_anim = 0.f;
+        if (gui.tab(ICON_FA_MOUSE, "Macros", gui.m_tab == 2 && g_featureSearch[0] == '\0')) {
+            g_featureSearch[0] = '\0'; ImGui::ClearActiveID(); gui.m_tab = 2; gui.m_anim = 0.f;
+        }
 
         Spacing();
 
         gui.group_title("Visuals");
-        if (gui.tab(ICON_FA_USER, "Cosmetic", gui.m_tab == 3) && gui.m_tab != 3)
-            gui.m_tab = 3, gui.m_anim = 0.f;
+        if (gui.tab(ICON_FA_USER, "Cosmetic", gui.m_tab == 3 && g_featureSearch[0] == '\0')) {
+            g_featureSearch[0] = '\0'; ImGui::ClearActiveID(); gui.m_tab = 3; gui.m_anim = 0.f;
+        }
 
-        if (gui.tab(ICON_FA_PALLET, "Bypass", gui.m_tab == 4) && gui.m_tab != 4)
-            gui.m_tab = 4, gui.m_anim = 0.f;
+        if (gui.tab(ICON_FA_PALLET, "Bypass", gui.m_tab == 4 && g_featureSearch[0] == '\0')) {
+            g_featureSearch[0] = '\0'; ImGui::ClearActiveID(); gui.m_tab = 4; gui.m_anim = 0.f;
+        }
 
         Spacing();
 
         gui.group_title("Miscellaneous");
-        if (gui.tab(ICON_FA_HAMMER, "Creator", gui.m_tab == 5) && gui.m_tab != 5)
-            gui.m_tab = 5, gui.m_anim = 0.f;
+        if (gui.tab(ICON_FA_HAMMER, "Creator", gui.m_tab == 5 && g_featureSearch[0] == '\0')) {
+            g_featureSearch[0] = '\0'; ImGui::ClearActiveID(); gui.m_tab = 5; gui.m_anim = 0.f;
+        }
 
-        if (gui.tab(ICON_FA_CODE, "Scripts", gui.m_tab == 6) && gui.m_tab != 6)
-            gui.m_tab = 6, gui.m_anim = 0.f;
+        if (gui.tab(ICON_FA_CODE, "Scripts", gui.m_tab == 6 && g_featureSearch[0] == '\0')) {
+            g_featureSearch[0] = '\0'; ImGui::ClearActiveID(); gui.m_tab = 6; gui.m_anim = 0.f;
+        }
 
         {
             auto& scriptTabs = nh::lua::Manager::get().tabs();
@@ -579,9 +590,9 @@ void DrawFrameWorkGUI()
 
                     ImGui::PushID(i);
 
-                    if (gui.tab(ICON_FA_HOME, scriptTabs[i].title.c_str(),
-                                gui.m_tab == tabId) && gui.m_tab != tabId)
-                        gui.m_tab = tabId, gui.m_anim = 0.f;
+                    if (gui.tab(ICON_FA_HOME, scriptTabs[i].title.c_str(), gui.m_tab == tabId && g_featureSearch[0] == '\0')) {
+                        g_featureSearch[0] = '\0'; ImGui::ClearActiveID(); gui.m_tab = tabId; gui.m_anim = 0.f;
+                    }
 
                     ImGui::PopID();
                 }
@@ -640,6 +651,7 @@ void DrawFrameWorkGUI()
             if (g_featureSearch[0] != '\0') {
                 if (gui.button(ICON_FA_TIMES, ImVec2(btnSize, inputH))) {
                     g_featureSearch[0] = '\0';
+                    ImGui::ClearActiveID();
                 }
             } else {
                 Dummy(ImVec2(btnSize, inputH));
@@ -683,9 +695,6 @@ void DrawFrameWorkGUI()
             gui.group_box(ICON_FA_USER " Player", ImVec2(GetWindowWidth(), GetWindowHeight())); {
 
                 gui.toggle("Noclip", &Vars::noclip);
-                gui.toggle("Noclip Hitsound", &Vars::noclipHitsound);
-                if (Vars::noclipHitsound)
-                    gui.slider_float("Hitsound Volume", &Vars::noclipHitsoundVolume, 0.f, 200.f, "%.0f%%");
                 gui.toggle("Noclip Tint", &Vars::noclipTint);
                 if (Vars::noclipTint) {
                     ImGui::ColorEdit4("Tint Color", Vars::noclipTintColor,
@@ -702,7 +711,7 @@ void DrawFrameWorkGUI()
 
                 gui.toggle("Show Hitboxes", &Vars::showHitboxes);
                 gui.toggle("Show On Death", &Vars::showHitboxesOnDeath);
-                gui.toggle("Trajectory Prediction", &Vars::showTrajectory);
+                gui.toggle("Show Trajectory (WIP)", &Vars::showTrajectory);
                 gui.toggle("Click Between Frames", &Vars::clickBetweenFrames);
 
                 gui.toggle("Hitbox Multiplier", &Vars::hitboxMultiplier);
@@ -748,14 +757,7 @@ void DrawFrameWorkGUI()
                 gui.toggle("Auto Song Download", &Vars::autoSongDownload);
                 gui.toggle("Layout Mode", &Vars::layoutMode);
 
-            } gui.end_group_box();
-
-            break;
-
-        case 1:
-
-            gui.group_box(ICON_FA_RUNNING " Global", ImVec2(GetWindowWidth() / 2 - GetStyle().ItemSpacing.x / 2, GetWindowHeight())); {
-
+                Spacing();
                 gui.toggle("Speedhack", &Vars::speedhack);
                 if (Vars::speedhack) {
                     PushItemWidth(-1);
@@ -766,9 +768,119 @@ void DrawFrameWorkGUI()
 
             } gui.end_group_box();
 
+            break;
+
+        case 1:
+
+            gui.group_box(ICON_FA_INFO_CIRCLE " Status", ImVec2(GetWindowWidth() / 2 - GetStyle().ItemSpacing.x / 2, GetWindowHeight())); {
+
+                gui.toggle("Hide Status", &Vars::hideStatus);
+                Spacing();
+                const char* const font_names[] = { "Big Font", "Chat Font", "Gold Font" };
+                PushItemWidth(-1);
+                Combo("##stfont", &Vars::statusFont, font_names, IM_ARRAYSIZE(font_names));
+                PopItemWidth();
+                gui.slider_float("Opacity", &Vars::statusOpacity, 0.f, 100.f, "%.0f%%");
+                gui.slider_float("Scale", &Vars::statusScale, 0.1f, 2.0f, "%.2fx");
+                Separator();
+
+                const char* const pos_names[] = { "Off", "Top-Left", "Top-Right", "Bottom-Left", "Bottom-Right", "Top-Center", "Bottom-Center" };
+
+                auto statusItem = [&](const char* label, const char* id, int* posVal) {
+                    ImGui::PushID(id);
+                    ImGui::TextUnformatted(label);
+                    ImGui::SameLine(ImGui::GetWindowWidth() - 95.f);
+                    ImGui::PushItemWidth(85.f);
+                    ImGui::Combo("##pos", posVal, pos_names, IM_ARRAYSIZE(pos_names));
+                    ImGui::PopItemWidth();
+                    ImGui::PopID();
+                };
+
+                for (int i = 0; i < (int)Vars::statusOrder.size(); ++i) {
+                    int id = Vars::statusOrder[i];
+                    ImGui::PushID(id);
+
+                    if (i > 0) {
+                        if (gui.button(ICON_FA_ARROW_UP, ImVec2(15.f, 18.f))) {
+                            std::swap(Vars::statusOrder[i], Vars::statusOrder[i - 1]);
+                            ImGui::PopID();
+                            break;
+                        }
+                    } else {
+                        Dummy(ImVec2(15.f, 18.f));
+                    }
+
+                    SameLine(0.f, 1.f);
+
+                    if (i < (int)Vars::statusOrder.size() - 1) {
+                        if (gui.button(ICON_FA_ARROW_DOWN, ImVec2(15.f, 18.f))) {
+                            std::swap(Vars::statusOrder[i], Vars::statusOrder[i + 1]);
+                            ImGui::PopID();
+                            break;
+                        }
+                    } else {
+                        Dummy(ImVec2(15.f, 18.f));
+                    }
+
+                    SameLine(0.f, 4.f);
+
+                    switch (id) {
+                    case 0:
+                        statusItem("Cheat Indicator", "ci", &Vars::statusCheatIndicator);
+                        if (Vars::statusCheatIndicator > 0) {
+                            const char* const mode_names[] = { "Dot", "Text" };
+                            ImGui::PushID("ci_mode");
+                            ImGui::TextUnformatted("Indicator Mode");
+                            ImGui::SameLine(ImGui::GetWindowWidth() - 95.f);
+                            ImGui::PushItemWidth(85.f);
+                            ImGui::Combo("##mode", &Vars::statusCheatIndicatorMode, mode_names, IM_ARRAYSIZE(mode_names));
+                            ImGui::PopItemWidth();
+                            ImGui::PopID();
+                        }
+                        break;
+                    case 1: statusItem("FPS", "fps", &Vars::statusFps); break;
+                    case 2: statusItem("CPS", "cps", &Vars::statusCps); break;
+                    case 3: statusItem("Best Run", "br", &Vars::statusBestRun); break;
+                    case 4: statusItem("Noclip Acc", "ncacc", &Vars::statusNoclipAcc); break;
+                    case 5: statusItem("Noclip Deaths", "ncd", &Vars::statusNoclipDeaths); break;
+                    case 6: statusItem("Attempts", "att", &Vars::statusAttempts); break;
+                    case 7: statusItem("Jumps", "jmp", &Vars::statusJumps); break;
+                    case 8: statusItem("Percentage", "pct", &Vars::statusPercentage); break;
+                    case 9: statusItem("Level Time", "lt", &Vars::statusLevelTime); break;
+                    case 10: statusItem("Session Time", "st", &Vars::statusSessionTime); break;
+                    case 11: statusItem("Clock", "clk", &Vars::statusClock); break;
+                    case 12: statusItem("Frame Counter", "fc", &Vars::statusFrameCounter); break;
+                    case 13: statusItem("Position", "pos", &Vars::statusPosition); break;
+                    case 14: statusItem("Velocity", "vel", &Vars::statusVelocity); break;
+                    case 15:
+                        statusItem("Message", "msg", &Vars::statusMessage);
+                        if (Vars::statusMessage > 0) {
+                            static char msgBuf[128] = "";
+                            static std::string lastLoadedStr = "";
+                            if (lastLoadedStr != Vars::statusMessageText && !ImGui::IsItemActive()) {
+                                std::strncpy(msgBuf, Vars::statusMessageText.c_str(), sizeof(msgBuf) - 1);
+                                lastLoadedStr = Vars::statusMessageText;
+                            }
+                            PushItemWidth(-1);
+                            if (InputText("##msgtext", msgBuf, sizeof(msgBuf))) {
+                                Vars::statusMessageText = msgBuf;
+                                lastLoadedStr = msgBuf;
+                            }
+                            PopItemWidth();
+                        }
+                        break;
+                    case 16: statusItem("Testmode", "tm", &Vars::statusTestmode); break;
+                    case 17: statusItem("Replay State", "rs", &Vars::statusReplayState); break;
+                    }
+
+                    ImGui::PopID();
+                }
+
+            } gui.end_group_box();
+
             SameLine();
 
-            gui.group_box(ICON_FA_TACHOMETER " Display", ImVec2(GetWindowWidth() / 2 - GetStyle().ItemSpacing.x / 2, GetWindowHeight())); {
+            gui.group_box(ICON_FA_DESKTOP " Display", ImVec2(GetWindowWidth() / 2 - GetStyle().ItemSpacing.x / 2, GetWindowHeight())); {
 
                 if (gui.toggle("FPS Bypass", &Vars::fpsUnlock))
                     ApplyFPS();

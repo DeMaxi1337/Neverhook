@@ -41,6 +41,11 @@ class $modify(NHStartposSwitcher, PlayLayer) {
             }
         }
 
+        if (m_fields->label) {
+            m_fields->label->removeFromParent();
+            m_fields->label = nullptr;
+        }
+
         if (Config::get().startposSwitcher && !m_fields->spots.empty() && m_uiLayer) {
             auto win = cocos2d::CCDirector::sharedDirector()->getWinSize();
             auto label = cocos2d::CCLabelBMFont::create(

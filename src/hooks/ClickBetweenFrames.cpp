@@ -2,6 +2,7 @@
 #include <Geode/modify/GJBaseGameLayer.hpp>
 
 #include "../Config.hpp"
+#include "MacroEngine.hpp"
 
 using namespace geode::prelude;
 
@@ -19,6 +20,15 @@ namespace {
         }
         return g_cbfMod;
     }
+
+    bool shouldEnableCbf() {
+        if (!Config::get().clickBetweenFrames)
+            return false;
+        auto& eng = MacroEngine::get();
+        if (eng.isRecording() || eng.isPlaying())
+            return false;
+        return true;
+    }
 }
 
 bool available() {
@@ -28,13 +38,13 @@ bool available() {
 void applyToLayer(GJBaseGameLayer* layer) {
     if (!layer) return;
 
-    const bool on = Config::get().clickBetweenFrames;
+    const bool on = shouldEnableCbf();
     layer->m_clickBetweenSteps = on;
     layer->m_clickOnSteps      = on;
 }
 
 void sync(bool force) {
-    const bool on = Config::get().clickBetweenFrames;
+    const bool on = shouldEnableCbf();
     const int  state = on ? 1 : 0;
 
     if (!force && state == g_lastApplied)

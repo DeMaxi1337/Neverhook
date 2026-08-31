@@ -162,6 +162,32 @@ void Config::load() {
     NH_LOAD_FLT(guiBlurStrength, 3.0);
     NH_LOAD_VAL(menuScale, 0);
     NH_LOAD_FLT(menuAnimSpeed, 1.0);
+
+    NH_LOAD_VAL(hideStatus, false);
+    NH_LOAD_FLT(statusOpacity, 70.0);
+    NH_LOAD_FLT(statusScale, 0.5);
+    NH_LOAD_VAL(statusFont, 0);
+    NH_LOAD_VAL(statusBg, false);
+
+    NH_LOAD_VAL(statusCheatIndicator, 0);
+    NH_LOAD_VAL(statusCheatIndicatorMode, 0);
+    NH_LOAD_VAL(statusFps, 0);
+    NH_LOAD_VAL(statusCps, 0);
+    NH_LOAD_VAL(statusBestRun, 0);
+    NH_LOAD_VAL(statusNoclipAcc, 0);
+    NH_LOAD_VAL(statusNoclipDeaths, 0);
+    NH_LOAD_VAL(statusAttempts, 0);
+    NH_LOAD_VAL(statusJumps, 0);
+    NH_LOAD_VAL(statusPercentage, 0);
+    NH_LOAD_VAL(statusLevelTime, 0);
+    NH_LOAD_VAL(statusSessionTime, 0);
+    NH_LOAD_VAL(statusClock, 0);
+    NH_LOAD_VAL(statusFrameCounter, 0);
+    NH_LOAD_VAL(statusMessage, 0);
+    statusMessageText = m->getSavedValue<std::string>("cfg_statusMessageText", "#ApproveNeverhook");
+    NH_LOAD_VAL(statusTestmode, 0);
+    NH_LOAD_VAL(statusReplayState, 0);
+    statusOrder = m->getSavedValue<std::vector<int>>("cfg_statusOrder", { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 });
 }
 
 void Config::save() {
@@ -304,6 +330,34 @@ void Config::save() {
     NH_SAVE_FLT(guiBlurStrength);
     NH_SAVE_VAL(menuScale);
     NH_SAVE_FLT(menuAnimSpeed);
+
+    NH_SAVE_VAL(hideStatus);
+    NH_SAVE_FLT(statusOpacity);
+    NH_SAVE_FLT(statusScale);
+    NH_SAVE_VAL(statusFont);
+    NH_SAVE_VAL(statusBg);
+
+    NH_SAVE_VAL(statusCheatIndicator);
+    NH_SAVE_VAL(statusCheatIndicatorMode);
+    NH_SAVE_VAL(statusFps);
+    NH_SAVE_VAL(statusCps);
+    NH_SAVE_VAL(statusBestRun);
+    NH_SAVE_VAL(statusNoclipAcc);
+    NH_SAVE_VAL(statusNoclipDeaths);
+    NH_SAVE_VAL(statusAttempts);
+    NH_SAVE_VAL(statusJumps);
+    NH_SAVE_VAL(statusPercentage);
+    NH_SAVE_VAL(statusLevelTime);
+    NH_SAVE_VAL(statusSessionTime);
+    NH_SAVE_VAL(statusClock);
+    NH_SAVE_VAL(statusFrameCounter);
+    NH_SAVE_VAL(statusPosition);
+    NH_SAVE_VAL(statusVelocity);
+    NH_SAVE_VAL(statusMessage);
+    m->setSavedValue("cfg_statusMessageText", statusMessageText);
+    NH_SAVE_VAL(statusTestmode);
+    NH_SAVE_VAL(statusReplayState);
+    m->setSavedValue("cfg_statusOrder", statusOrder);
 }
 
 void applyFPS() {

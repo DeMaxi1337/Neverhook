@@ -152,5 +152,33 @@ namespace Vars {
     inline bool&  endscreenStats   = Config::get().endscreenStats;
     inline bool&  endscreenPhrases = Config::get().endscreenPhrases;
 
+    inline bool&  hideStatus                 = Config::get().hideStatus;
+    inline float& statusOpacity              = Config::get().statusOpacity;
+    inline float& statusScale                = Config::get().statusScale;
+    inline int&   statusFont                 = Config::get().statusFont;
+    inline bool&  statusBg                   = Config::get().statusBg;
+
+    inline int&   statusCheatIndicator       = Config::get().statusCheatIndicator;
+    inline int&   statusCheatIndicatorMode   = Config::get().statusCheatIndicatorMode;
+    inline int&   statusFps                  = Config::get().statusFps;
+    inline int&   statusCps                  = Config::get().statusCps;
+    inline int&   statusBestRun              = Config::get().statusBestRun;
+    inline int&   statusNoclipAcc            = Config::get().statusNoclipAcc;
+    inline int&   statusNoclipDeaths         = Config::get().statusNoclipDeaths;
+    inline int&   statusAttempts             = Config::get().statusAttempts;
+    inline int&   statusJumps                = Config::get().statusJumps;
+    inline int&   statusPercentage           = Config::get().statusPercentage;
+    inline int&   statusLevelTime            = Config::get().statusLevelTime;
+    inline int&   statusSessionTime          = Config::get().statusSessionTime;
+    inline int&   statusClock                = Config::get().statusClock;
+    inline int&   statusFrameCounter         = Config::get().statusFrameCounter;
+    inline int&   statusPosition             = Config::get().statusPosition;
+    inline int&   statusVelocity             = Config::get().statusVelocity;
+    inline int&   statusMessage              = Config::get().statusMessage;
+    inline std::string& statusMessageText    = Config::get().statusMessageText;
+    inline int&   statusTestmode             = Config::get().statusTestmode;
+    inline int&   statusReplayState          = Config::get().statusReplayState;
+    inline std::vector<int>& statusOrder     = Config::get().statusOrder;
+
     inline bool   menuOpen       = false;
 }

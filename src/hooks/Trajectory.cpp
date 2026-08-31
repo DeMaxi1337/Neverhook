@@ -6,8 +6,10 @@
 #include <Geode/modify/HardStreak.hpp>
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/EffectGameObject.hpp>
+#include <Geode/binding/RingObject.hpp>
 
 #include "../Config.hpp"
+#include <unordered_set>
 
 using namespace geode::prelude;
 
@@ -93,6 +95,100 @@ uint64_t packFlags(PlayerObject* player) {
     return flags;
 }
 
+void hideGhostSprites(PlayerObject* ghost) {
+    if (!ghost) return;
+    ghost->setVisible(false);
+    if (ghost->m_iconSprite) ghost->m_iconSprite->setVisible(false);
+    if (ghost->m_vehicleSprite) ghost->m_vehicleSprite->setVisible(false);
+    if (ghost->m_spiderSprite) ghost->m_spiderSprite->setVisible(false);
+    if (ghost->m_robotSprite) ghost->m_robotSprite->setVisible(false);
+}
+
+void applyPortal(PlayerObject* ghost, GameObject* obj) {
+    if (!ghost || !obj) return;
+
+    auto t = obj->m_objectType;
+    int id = obj->m_objectID;
+
+    if (t == GameObjectType::NormalGravityPortal || id == 10) {
+        ghost->flipGravity(false, true);
+    }
+    else if (t == GameObjectType::InverseGravityPortal || id == 11) {
+        ghost->flipGravity(true, true);
+    }
+    else if (t == GameObjectType::GravityTogglePortal) {
+        ghost->flipGravity(!ghost->m_isUpsideDown, true);
+    }
+    else if (t == GameObjectType::CubePortal || id == 12) {
+        ghost->toggleFlyMode(false, false);
+        ghost->toggleRollMode(false, false);
+        ghost->toggleBirdMode(false, false);
+        ghost->toggleDartMode(false, false);
+        ghost->toggleRobotMode(false, false);
+        ghost->toggleSpiderMode(false, false);
+        ghost->toggleSwingMode(false, false);
+    }
+    else if (t == GameObjectType::ShipPortal || id == 13) {
+        ghost->toggleFlyMode(true, false);
+    }
+    else if (t == GameObjectType::BallPortal || id == 47) {
+        ghost->toggleRollMode(true, false);
+    }
+    else if (t == GameObjectType::UfoPortal || id == 111) {
+        ghost->toggleBirdMode(true, false);
+    }
+    else if (t == GameObjectType::WavePortal || id == 660) {
+        ghost->toggleDartMode(true, false);
+    }
+    else if (t == GameObjectType::RobotPortal || id == 745) {
+        ghost->toggleRobotMode(true, false);
+    }
+    else if (t == GameObjectType::SpiderPortal || id == 1331) {
+        ghost->toggleSpiderMode(true, false);
+    }
+    else if (t == GameObjectType::SwingPortal || id == 1933) {
+        ghost->toggleSwingMode(true, false);
+    }
+    else if (t == GameObjectType::MiniSizePortal || id == 101) {
+        ghost->togglePlayerScale(true, true);
+        ghost->m_vehicleSize = 0.6f;
+        ghost->setScale(0.6f);
+    }
+    else if (t == GameObjectType::RegularSizePortal || id == 99) {
+        ghost->togglePlayerScale(false, true);
+        ghost->m_vehicleSize = 1.0f;
+        ghost->setScale(1.0f);
+    }
+    else if (id == 200) {
+        ghost->m_speedMultiplier = 0.7f;
+    }
+    else if (id == 201) {
+        ghost->m_speedMultiplier = 0.9f;
+    }
+    else if (id == 202) {
+        ghost->m_speedMultiplier = 1.1f;
+    }
+    else if (id == 203) {
+        ghost->m_speedMultiplier = 1.3f;
+    }
+    else if (id == 1334) {
+        ghost->m_speedMultiplier = 1.6f;
+    }
+    else if (t == GameObjectType::YellowJumpPad || id == 35) {
+        ghost->boostPlayer(15.f);
+    }
+    else if (t == GameObjectType::PinkJumpPad || id == 140) {
+        ghost->boostPlayer(11.f);
+    }
+    else if (t == GameObjectType::RedJumpPad || id == 1331) {
+        ghost->boostPlayer(19.f);
+    }
+    else if (t == GameObjectType::GravityPad || id == 67) {
+        ghost->flipGravity(!ghost->m_isUpsideDown, true);
+        ghost->boostPlayer(12.f);
+    }
+}
+
 class Simulation {
 public:
     static Simulation& get() {
@@ -130,6 +226,9 @@ public:
 
     void tick(GJBaseGameLayer* game) {
         if (!game) return;
+
+        auto pl = typeinfo_cast<PlayLayer*>(game);
+        if (!pl) return;
 
         if (!Config::get().showTrajectory) {
             if (m_draw) m_draw->setVisible(false);
@@ -190,7 +289,6 @@ private:
     CCNode* hostFor(GJBaseGameLayer* game) {
         CCNode* host = nullptr;
         if (game->m_debugDrawNode) host = game->m_debugDrawNode->getParent();
-        if (!host) host = game->m_objectLayer;
         if (!host) host = game;
         if (typeinfo_cast<CCSpriteBatchNode*>(host)) host = game;
         return host;
@@ -204,9 +302,6 @@ private:
         ghost->setID(id);
         ghost->setPosition({ 0.f, 105.f });
         ghost->setVisible(false);
-
-        CCNode* host = game->m_objectLayer;
-        if (host && !typeinfo_cast<CCSpriteBatchNode*>(host)) host->addChild(ghost);
 
         return ghost;
     }
@@ -279,7 +374,15 @@ private:
     }
 
     void copyState(PlayerObject* real, PlayerObject* ghost) {
-        ghost->copyAttributes(real);
+        ghost->m_isShip               = real->m_isShip;
+        ghost->m_isBall               = real->m_isBall;
+        ghost->m_isBird               = real->m_isBird;
+        ghost->m_isDart               = real->m_isDart;
+        ghost->m_isRobot              = real->m_isRobot;
+        ghost->m_isSpider             = real->m_isSpider;
+        ghost->m_isSwing              = real->m_isSwing;
+        ghost->m_isUpsideDown         = real->m_isUpsideDown;
+        ghost->m_vehicleSize          = real->m_vehicleSize;
 
         ghost->m_yVelocity            = real->m_yVelocity;
         ghost->m_gravity              = real->m_gravity;
@@ -318,7 +421,7 @@ private:
         ghost->setRotation(real->getRotation());
         ghost->setScaleX(real->getScaleX());
         ghost->setScaleY(real->getScaleY());
-        ghost->setVisible(false);
+        hideGhostSprites(ghost);
 
         clearCollisionLog(ghost);
     }
@@ -342,6 +445,78 @@ private:
         }
     }
 
+    void handleInteractiveObjects(GJBaseGameLayer* game, PlayerObject* ghost, int mode, std::unordered_set<void*>& activated) {
+        if (!game || !ghost) return;
+
+        const CCPoint ghostPos = ghost->getPosition();
+        const int secX = static_cast<int>(ghostPos.x / 100.f);
+
+        int colCount = game->m_sections.empty() ? -1 : static_cast<int>(game->m_sections.size());
+        if (colCount <= 0) return;
+
+        int minSec = std::max(0, secX - 1);
+        int maxSec = std::min(colCount - 1, secX + 1);
+
+        for (int i = minSec; i <= maxSec; ++i) {
+            auto column = game->m_sections[i];
+            if (!column) continue;
+
+            int rowCount = static_cast<int>(column->size());
+            for (int j = 0; j < rowCount; ++j) {
+                auto section = column->at(j);
+                if (!section) continue;
+
+                int n = static_cast<int>(section->size());
+                if (i < static_cast<int>(game->m_sectionSizes.size()) && game->m_sectionSizes[i]
+                    && j < static_cast<int>(game->m_sectionSizes[i]->size())) {
+                    n = std::min(n, game->m_sectionSizes[i]->at(j));
+                }
+
+                for (int k = 0; k < n; ++k) {
+                    auto obj = section->at(k);
+                    if (!obj || obj->m_isDecoration || obj->m_isDecoration2) continue;
+
+                    if (activated.find(obj) != activated.end()) continue;
+
+                    CCPoint objPos = ccp(obj->m_positionX, obj->m_positionY);
+                    float radius = obj->m_objectRadius > 0.f ? obj->m_objectRadius : 25.f;
+                    radius *= std::max(obj->getScaleX(), obj->getScaleY());
+
+                    float distX = std::abs(ghostPos.x - objPos.x);
+                    float distY = std::abs(ghostPos.y - objPos.y);
+
+                    if (distX > (radius + 25.f) || distY > (radius + 35.f)) continue;
+
+                    auto t = obj->m_objectType;
+                    bool isStandardRing = t == GameObjectType::YellowJumpRing
+                        || t == GameObjectType::PinkJumpRing
+                        || t == GameObjectType::RedJumpRing
+                        || t == GameObjectType::GravityRing
+                        || t == GameObjectType::GreenRing
+                        || t == GameObjectType::DropRing
+                        || t == GameObjectType::SpiderOrb
+                        || t == GameObjectType::DashRing
+                        || t == GameObjectType::GravityDashRing;
+
+                    if (isStandardRing) {
+                        if (mode == ModeHold || mode == ModeSwift) {
+                            activated.insert(obj);
+                            if (auto ring = typeinfo_cast<RingObject*>(obj)) {
+                                ghost->ringJump(ring, true);
+                            } else {
+                                ghost->ringJump(reinterpret_cast<RingObject*>(obj), true);
+                            }
+                        }
+                    }
+                    else if (t != GameObjectType::CustomRing) {
+                        activated.insert(obj);
+                        applyPortal(ghost, obj);
+                    }
+                }
+            }
+        }
+    }
+
     void simulate(GJBaseGameLayer* game, bool first, int mode) {
         PlayerObject* ghost = first ? m_ghost1 : m_ghost2;
         PlayerObject* real  = first ? game->m_player1 : game->m_player2;
@@ -350,7 +525,7 @@ private:
         GJGameState savedState = game->m_gameState;
 
         EffectManagerState savedEffects;
-        bool hasEffects = game->m_effectManager != nullptr;
+        bool hasEffects = (game->m_effectManager != nullptr) && (typeinfo_cast<PlayLayer*>(game) != nullptr);
         if (hasEffects) game->m_effectManager->saveToState(savedEffects);
 
         copyState(real, ghost);
@@ -367,9 +542,11 @@ private:
                                 : 1.0f;
         const float width = kLineWidth / zoom;
 
+        std::unordered_set<void*> activated;
+
         int steps = 0;
         for (int i = 0; i < kMaxSteps; i++) {
-            if (!step(game, ghost, colour, width)) break;
+            if (!step(game, ghost, colour, width, mode, activated)) break;
             steps++;
             if (first ? m_dead1 : m_dead2) break;
         }
@@ -379,10 +556,10 @@ private:
         game->m_gameState = savedState;
         if (hasEffects) game->m_effectManager->loadFromState(savedEffects);
 
-        ghost->setVisible(false);
+        hideGhostSprites(ghost);
     }
 
-    bool step(GJBaseGameLayer* game, PlayerObject* ghost, ccColor4F const& colour, float width) {
+    bool step(GJBaseGameLayer* game, PlayerObject* ghost, ccColor4F const& colour, float width, int mode, std::unordered_set<void*>& activated) {
         const CCPoint from = ghost->getPosition();
 
         game->m_gameState.m_currentProgress++;
@@ -393,11 +570,21 @@ private:
         ghost->update(kStepDelta);
         ghost->updateRotation(kStepDelta);
 
-        if (game->checkCollisions(ghost, kStepDelta, false) == 1) {
-            reportDeath(ghost);
+        const CCPoint to = ghost->getPosition();
+        if (std::abs(to.y - from.y) > 30.f && std::abs(to.x - from.x) < 15.f) {
+            return false;
         }
 
-        if (game->m_effectManager) game->m_effectManager->postCollisionCheck();
+        handleInteractiveObjects(game, ghost, mode, activated);
+
+        if (game->checkCollisions(ghost, kStepDelta, false) == 1) {
+            reportDeath(ghost);
+            return false;
+        }
+
+        if (game->m_effectManager && typeinfo_cast<PlayLayer*>(game)) {
+            game->m_effectManager->postCollisionCheck();
+        }
 
         m_draw->drawSegment(from, ghost->getPosition(), width, colour);
 
@@ -405,23 +592,41 @@ private:
     }
 
     void drawHitbox(PlayerObject* ghost, ccColor4F const& colour, float width) {
-        CCRect rect = ghost->getObjectRect();
+        float widthX = 30.f;
+        float heightY = 30.f;
+
+        if (ghost->m_isDart) {
+            widthX = 10.f;
+            heightY = 10.f;
+        }
+        else if (ghost->m_isShip || ghost->m_isBall || ghost->m_isBird || ghost->m_isSwing) {
+            widthX = 24.f;
+            heightY = 24.f;
+        }
+
+        if (ghost->m_vehicleSize > 0.f && ghost->m_vehicleSize < 0.9f) {
+            widthX *= 0.6f;
+            heightY *= 0.6f;
+        }
+
+        const CCPoint pos = ghost->getPosition();
+        const float halfX = widthX * 0.5f;
+        const float halfY = heightY * 0.5f;
 
         CCPoint points[4] = {
-            { rect.getMinX(), rect.getMinY() },
-            { rect.getMaxX(), rect.getMinY() },
-            { rect.getMaxX(), rect.getMaxY() },
-            { rect.getMinX(), rect.getMaxY() },
+            { pos.x - halfX, pos.y - halfY },
+            { pos.x + halfX, pos.y - halfY },
+            { pos.x + halfX, pos.y + halfY },
+            { pos.x - halfX, pos.y + halfY }
         };
 
         const float angle = ghost->getRotation();
-        const CCPoint mid = { rect.getMidX(), rect.getMidY() };
         for (int i = 0; i < 4; i++) {
-            points[i] = points[i].rotateByAngle(mid, -CC_DEGREES_TO_RADIANS(angle));
+            points[i] = points[i].rotateByAngle(pos, -CC_DEGREES_TO_RADIANS(angle));
         }
 
         m_draw->drawPolygon(points, 4, { 0.f, 0.f, 0.f, 0.f },
-                            width * (kHitboxWidth / kLineWidth), colour);
+                            width * 0.8f, colour);
     }
 };
 
@@ -466,17 +671,10 @@ class $modify(NHTrajPlayLayer, PlayLayer) {
     }
 };
 
-class $modify(NHTrajEditor, LevelEditorLayer) {
-    void postUpdate(float dt) {
-        LevelEditorLayer::postUpdate(dt);
-        if (m_playbackMode == PlaybackMode::Playing) Simulation::get().tick(this);
-    }
-};
-
 class $modify(NHTrajBaseLayer, GJBaseGameLayer) {
     void playerTouchedRing(PlayerObject* player, RingObject* ring) {
         if (Simulation::get().drawing()) {
-            if (Simulation::get().isGhost(player)) player->ringJump(ring, false);
+            if (Simulation::get().isGhost(player)) player->ringJump(ring, true);
             return;
         }
         GJBaseGameLayer::playerTouchedRing(player, ring);

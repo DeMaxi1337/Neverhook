@@ -15,13 +15,20 @@ namespace {
     int passesThisFrame(double tps) {
         double frame = CCDirector::get()->getDeltaTime();
         if (frame <= 0.0) frame = 1.0 / 60.0;
+        if (frame > 0.05) frame = 0.05;
         int passes = static_cast<int>(std::ceil(tps * frame));
-        passes = std::clamp(passes, 1, 2000);
+        passes = std::clamp(passes, 1, 60);
         return passes;
     }
 }
 
 class $modify(NHTpsLayer, GJBaseGameLayer) {
+    void resetLevelVariables() {
+        GJBaseGameLayer::resetLevelVariables();
+        m_extraDelta = 0.0;
+        m_resumeTimer = 2;
+    }
+
     double getModifiedDelta(float dt) {
         auto& c = Config::get();
 

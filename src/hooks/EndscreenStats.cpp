@@ -183,10 +183,20 @@ class $modify(NHEndLevelLayer, EndLevelLayer) {
         if (leftText.empty() && rightText.empty())
             return;
 
+        bool hasCoins = false;
+        if (m_playLayer && m_playLayer->m_level && m_playLayer->m_level->m_coins > 0)
+            hasCoins = true;
+        else if (bgl && bgl->m_level && bgl->m_level->m_coins > 0)
+            hasCoins = true;
+        else if (m_coinsToAnimate && m_coinsToAnimate->count() > 0)
+            hasCoins = true;
+
+        bool hasRewards = (m_stars > 0 || m_moons > 0 || m_orbs > 0 || m_diamonds > 0);
+
         std::string bottomMsg;
         if (!systemMsg.empty())
             bottomMsg = systemMsg;
-        else if (Config::get().endscreenPhrases)
+        else if (Config::get().endscreenPhrases && !hasCoins)
             bottomMsg = nh::phrases::random();
 
         auto container = CCNode::create();
@@ -199,16 +209,19 @@ class $modify(NHEndLevelLayer, EndLevelLayer) {
         const size_t rows = std::max(leftLabels.size(), rightLabels.size());
 
         if (rightLabels.empty()) {
-            nhPlaceColumn(container, leftLabels, rows, 0.f);
+            const float shiftX = hasRewards ? -48.f : 0.f;
+            nhPlaceColumn(container, leftLabels, rows, shiftX);
         }
         else {
-            const float total   = leftWidth + kColGap + rightWidth;
-            const float boxLeft = -total / 2.f;
+            const float gap     = hasRewards ? 36.f : kColGap;
+            const float total   = leftWidth + gap + rightWidth;
+            const float shiftX  = hasRewards ? -48.f : 0.f;
+            const float boxLeft = -total / 2.f + shiftX;
 
             nhPlaceColumn(container, leftLabels, rows,
                           boxLeft + leftWidth / 2.f);
             nhPlaceColumn(container, rightLabels, rows,
-                          boxLeft + leftWidth + kColGap + rightWidth / 2.f);
+                          boxLeft + leftWidth + gap + rightWidth / 2.f);
         }
 
         float blockSpan = (rows - 1) * kLineStep;

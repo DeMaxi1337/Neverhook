@@ -17,6 +17,7 @@ struct NHPlayerSnap {
     bool             upsideDown;
     bool             dashing;
     float            playerSpeed;
+    double           platformerXVel;
 };
 
 struct NHCheckpointSnap {
@@ -27,24 +28,28 @@ struct NHCheckpointSnap {
 
 static NHPlayerSnap nhSnapPlayer(PlayerObject* p) {
     NHPlayerSnap s;
-    s.pos         = p->getPosition();
-    s.rot         = p->getRotation();
-    s.velY        = p->m_yVelocity;
-    s.onGround    = p->m_isOnGround;
-    s.upsideDown  = p->m_isUpsideDown;
-    s.dashing     = p->m_isDashing;
-    s.playerSpeed = p->m_playerSpeed;
+    s.pos            = p->getPosition();
+    s.rot            = p->getRotation();
+    s.velY           = p->m_yVelocity;
+    s.onGround       = p->m_isOnGround;
+    s.upsideDown     = p->m_isUpsideDown;
+    s.dashing        = p->m_isDashing;
+    s.playerSpeed    = p->m_playerSpeed;
+    s.platformerXVel = p->m_platformerXVelocity;
     return s;
 }
 
 static void nhApplyPlayer(PlayerObject* p, const NHPlayerSnap& s) {
     p->setPosition(s.pos);
+    p->m_position     = s.pos;
     p->setRotation(s.rot);
-    p->m_yVelocity   = s.velY;
-    p->m_isOnGround  = s.onGround;
+    p->m_yVelocity    = s.velY;
+    p->m_isOnGround   = s.onGround;
     p->m_isUpsideDown = s.upsideDown;
-    p->m_isDashing   = s.dashing;
-    p->m_playerSpeed = s.playerSpeed;
+    p->m_isDashing    = s.dashing;
+    p->m_playerSpeed  = s.playerSpeed;
+    p->m_platformerXVelocity = s.platformerXVel;
+    p->m_jumpBuffered = false;
 }
 
 class $modify(NHPracticeFix, PlayLayer) {
@@ -76,6 +81,8 @@ class $modify(NHPracticeFix, PlayLayer) {
 
     void loadFromCheckpoint(CheckpointObject* cp) {
         PlayLayer::loadFromCheckpoint(cp);
+        m_extraDelta = 0.0;
+        m_resumeTimer = 2;
         if (!nhPracticeFixActive())
             return;
         auto it = m_fields->snaps.find(cp);

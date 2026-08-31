@@ -60,6 +60,8 @@ class $modify(NHSmartStartPos, PlayLayer) {
                 case 99: case 101:
                 case 45: case 46:
                 case 286: case 287:
+                case 10: case 11:
+                case 2903: case 2904:
                     portals.push_back(obj);
                     break;
                 default: break;
@@ -67,22 +69,26 @@ class $modify(NHSmartStartPos, PlayLayer) {
             }
         }
 
-        if (starts.empty() || portals.empty()) return;
+        if (starts.empty()) return;
 
         std::sort(portals.begin(), portals.end(), [](GameObject* a, GameObject* b) {
             return a->m_positionX < b->m_positionX;
         });
+
+        LevelSettingsObject* ls = m_levelSettings;
 
         for (auto sp : starts) {
             auto st = sp->m_startSettings;
             if (!st) continue;
             float x = sp->m_positionX;
 
-            GameObject* lastSpeed = nullptr;
-            GameObject* lastMode = nullptr;
-            GameObject* lastSize = nullptr;
-            GameObject* lastMirror = nullptr;
-            GameObject* lastDual = nullptr;
+            GameObject* lastSpeed   = nullptr;
+            GameObject* lastMode    = nullptr;
+            GameObject* lastSize    = nullptr;
+            GameObject* lastMirror  = nullptr;
+            GameObject* lastDual    = nullptr;
+            GameObject* lastGravity = nullptr;
+            GameObject* lastReverse = nullptr;
 
             for (auto o : portals) {
                 if (o->m_positionX - 10.f > x) break;
@@ -92,13 +98,24 @@ class $modify(NHSmartStartPos, PlayLayer) {
                 else if (id == 99 || id == 101) lastSize = o;
                 else if (id == 45 || id == 46) lastMirror = o;
                 else if (id == 286 || id == 287) lastDual = o;
+                else if (id == 10 || id == 11) lastGravity = o;
+                else if (id == 2903 || id == 2904) lastReverse = o;
             }
 
-            if (lastSpeed)  st->m_startSpeed = nhStartSpeed(lastSpeed->m_objectID);
-            if (lastMode)   st->m_startMode = nhStartMode(lastMode->m_objectID);
-            if (lastSize)   st->m_startMini = (lastSize->m_objectID == 101);
-            if (lastMirror) st->m_mirrorMode = (lastMirror->m_objectID == 45);
-            if (lastDual)   st->m_startDual = (lastDual->m_objectID == 286);
+            st->m_startSpeed      = lastSpeed   ? nhStartSpeed(lastSpeed->m_objectID) : (ls ? ls->m_startSpeed : Speed::Normal);
+            st->m_startMode       = lastMode    ? nhStartMode(lastMode->m_objectID)   : (ls ? ls->m_startMode : 0);
+            st->m_startMini       = lastSize    ? (lastSize->m_objectID == 101)        : (ls ? ls->m_startMini : false);
+            st->m_mirrorMode      = lastMirror  ? (lastMirror->m_objectID == 45)      : (ls ? ls->m_mirrorMode : false);
+            st->m_startDual       = lastDual    ? (lastDual->m_objectID == 286)       : (ls ? ls->m_startDual : false);
+            st->m_isFlipped       = lastGravity ? (lastGravity->m_objectID == 11)      : (ls ? ls->m_isFlipped : false);
+            st->m_reverseGameplay = lastReverse ? (lastReverse->m_objectID == 2903)    : (ls ? ls->m_reverseGameplay : false);
+
+            if (ls) {
+                st->m_twoPlayerMode  = ls->m_twoPlayerMode;
+                st->m_rotateGameplay = ls->m_rotateGameplay;
+                st->m_noTimePenalty  = ls->m_noTimePenalty;
+                st->m_spawnGroup     = ls->m_spawnGroup;
+            }
         }
     }
 };

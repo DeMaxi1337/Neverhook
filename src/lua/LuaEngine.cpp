@@ -492,11 +492,13 @@ void Manager::refresh() {
 }
 
 void Manager::dispatch(Event e) {
+    if (m_scripts.empty()) return;
     for (auto& s : m_scripts)
         if (s && s->running()) s->dispatch(e);
 }
 
 void Manager::update() {
+    if (m_scripts.empty()) return;
     pollLevelEvents();
     updateNodes();
     updateMedia();

@@ -154,6 +154,34 @@ struct Config {
     bool  endscreenStats   = true;
     bool  endscreenPhrases = true;
 
+    bool  hideStatus                 = false;
+    float statusOpacity              = 70.0f;
+    float statusScale                = 0.5f;
+    int   statusFont                 = 0;
+    bool  statusBg                   = false;
+
+    int   statusCheatIndicator       = 0;
+    int   statusCheatIndicatorMode   = 0;
+    int   statusFps                  = 0;
+    int   statusCps                  = 0;
+    int   statusBestRun              = 0;
+    int   statusNoclipAcc            = 0;
+    int   statusNoclipDeaths         = 0;
+    int   statusAttempts             = 0;
+    int   statusJumps                = 0;
+    int   statusPercentage           = 0;
+    int   statusLevelTime            = 0;
+    int   statusSessionTime          = 0;
+    int   statusClock                = 0;
+    int   statusFrameCounter         = 0;
+    int   statusPosition             = 0;
+    int   statusVelocity             = 0;
+    int   statusMessage              = 0;
+    std::string statusMessageText    = "";
+    int   statusTestmode             = 0;
+    int   statusReplayState          = 0;
+    std::vector<int> statusOrder     = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 };
+
     static Config& get() {
         static Config inst;
         return inst;

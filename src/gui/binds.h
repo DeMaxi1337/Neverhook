@@ -1047,7 +1047,6 @@ public:
         category("PLAYER > NOCLIP");
         registerBool("Noclip", &Vars::noclip);
         registerBool("Noclip Tint", &Vars::noclipTint);
-        registerBool("Noclip Hitsound", &Vars::noclipHitsound);
         category("PLAYER > DEATH");
         registerBool("No Death Effect", &Vars::noDeathEffect);
         registerBool("No Respawn Flash", &Vars::noRespawnFlash);
@@ -1085,13 +1084,16 @@ public:
         registerBool("No Wave Trail", &Vars::noWaveTrail);
         registerBool("Solid Wave Trail", &Vars::solidWaveTrail);
         registerValued("Wave Trail Size", &Vars::waveTrailSize, &Vars::waveTrailSizeValue, 0.1f, 5.0f);
+        category("OVERLAY > STATUS");
+        registerBool("Hide Status", &Vars::hideStatus);
+        registerBool("Status Background", &Vars::statusBg);
         category("OVERLAY > HUD");
         registerBool("Accurate Percentage", &Vars::accuratePercent);
         registerBool("Keybinds", &Vars::keybindsList);
         category("PLAYER > HITBOX");
         registerBool("Show Hitboxes", &Vars::showHitboxes);
         registerBool("Show On Death", &Vars::showHitboxesOnDeath);
-        registerBool("Trajectory Prediction", &Vars::showTrajectory);
+        registerBool("Show Trajectory (WIP)", &Vars::showTrajectory);
         registerBool("Click Between Frames", &Vars::clickBetweenFrames);
         category("COSMETIC > EFFECTS");
         registerBool("No Shader", &Vars::noShader);

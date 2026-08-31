@@ -56,23 +56,6 @@ class $modify(NHNoclipBGL, GJBaseGameLayer) {
 
         if (!f->didDieLastTick && f->hasDiedThisTick) {
             f->totalDeaths++;
-            if (Config::get().noclipHitsound) {
-                auto fae = FMODAudioEngine::sharedEngine();
-                if (fae && fae->m_system) {
-                    auto dir = Mod::get()->getResourcesDir();
-                    std::string path = (dir / "noclip_hit.ogg").string();
-                    if (!std::filesystem::exists(path))
-                        path = (dir / "resources" / "noclip_hit.ogg").string();
-                    static FMOD::Sound* nhHitSnd = nullptr;
-                    if (!nhHitSnd)
-                        fae->m_system->createSound(path.c_str(), FMOD_DEFAULT, nullptr, &nhHitSnd);
-                    if (nhHitSnd) {
-                        FMOD::Channel* ch = nullptr;
-                        fae->m_system->playSound(nhHitSnd, nullptr, false, &ch);
-                        if (ch) ch->setVolume(Config::get().noclipHitsoundVolume / 100.f);
-                    }
-                }
-            }
         }
 
         f->didDieLastTick = f->hasDiedThisTick;

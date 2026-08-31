@@ -266,8 +266,8 @@ void renderRegion(const ImDrawList*, const ImDrawCmd* cmd) {
 
     glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, px0, py0, pw, ph, 0);
 
-    int levels = 2 + (int)(region.radius * 0.6f);
-    levels = ImClamp(levels, 2, 6);
+    int levels = 2 + (int)(region.radius * 0.3f);
+    levels = ImClamp(levels, 2, 3);
     while (levels > 1 && (std::min(pw, ph) >> levels) < 8)
         levels--;
 

@@ -4,13 +4,13 @@ Mod menu for Geometry Dash with QoF features
 
 ## Features
 
-- **Player:** noclip, show hitboxes
-- **Macros:** replay bot, macro editor *(in progress)*
-- **Global:** FPS unlock, TPS bypass, speedhack
-- **Cosmetic:** custom wave trail, RGB icons, hide UI *(in progress)*
-- **Bypass:** unlock all icons, shops, vault codes *(in progress)*
-- **Creator:** no object limit, better level info, free scroll *(in progress)*
-- **Scripts:** Lua scripts support *(in progress)*
+- **Player:** noclip, speedhack, show hitboxes
+- **Macros:** TAS-bot, macro editor *(in progress)*
+- **Global:** labels, display settings
+- **Cosmetic:** custom wave trail, accurate percentage
+- **Bypass:** unlock all icons, shops, vaults
+- **Creator:** no object limit, level edit, slider limit bypas
+- **Scripts:** LuaJIT system with isolated sandbox
 
 ## The project is under development!
 
@@ -22,6 +22,8 @@ Expect occasional crashes, UI glitches, or incomplete features. If something bre
 **DeMaxi1337** (t.me/demaxi1338) - main coder
 
 **spencer** (t.me/burj7halifa) - original GUI design (not a project contributor)
+
+**ninXout** (github.com/ninXout) — Frame Advance function (borrowed code, not a project contributor)
 
 ## Support me on Boosty
 

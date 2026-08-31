@@ -129,7 +129,7 @@ private:
             drawCircle(
                 ccp(o->m_positionX, o->m_positionY),
                 o->m_objectRadius * std::max<float>(o->m_scaleX, o->m_scaleY),
-                hollow, OUTLINE, col, 60);
+                hollow, OUTLINE, col, 24);
             return;
         }
 
