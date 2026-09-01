@@ -277,6 +277,9 @@ static void DrawFeatureSearchResults(const char* q) {
         if (MatchesFeatureQuery("Solid Wave Trail", q)) vMatches++;
         if (MatchesFeatureQuery("Wave Trail Size", q)) vMatches++;
         if (MatchesFeatureQuery("No Shader", q)) vMatches++;
+        if (MatchesFeatureQuery("No Camera Shake", q)) vMatches++;
+        if (MatchesFeatureQuery("No End Shake", q)) vMatches++;
+        if (MatchesFeatureQuery("No Death Shake", q)) vMatches++;
         if (MatchesFeatureQuery("Hide Complete VFX", q)) vMatches++;
         if (MatchesFeatureQuery("No Music Fade Out", q)) vMatches++;
         if (MatchesFeatureQuery("Accurate Percentage", q)) vMatches++;
@@ -308,6 +311,9 @@ static void DrawFeatureSearchResults(const char* q) {
                         gui.slider_float("Size", &Vars::waveTrailSizeValue, 0.1f, 5.0f, "%.1fx");
                 }
                 if (MatchesFeatureQuery("No Shader", q)) gui.toggle("No Shader", &Vars::noShader);
+                if (MatchesFeatureQuery("No Camera Shake", q)) gui.toggle("No Camera Shake", &Vars::noCameraShake);
+                if (MatchesFeatureQuery("No End Shake", q)) gui.toggle("No End Shake", &Vars::noEndShake);
+                if (MatchesFeatureQuery("No Death Shake", q)) gui.toggle("No Death Shake", &Vars::noDeathShake);
                 if (MatchesFeatureQuery("Hide Complete VFX", q)) gui.toggle("Hide Complete VFX", &Vars::hideLevelCompleteVfx);
                 if (MatchesFeatureQuery("No Music Fade Out", q)) gui.toggle("No Music Fade Out", &Vars::noMusicFadeOut);
                 if (MatchesFeatureQuery("Accurate Percentage", q)) {
@@ -335,6 +341,8 @@ static void DrawFeatureSearchResults(const char* q) {
         if (MatchesFeatureQuery("Instant Restart", q)) bMatches++;
         if (MatchesFeatureQuery("Custom Respawn", q)) bMatches++;
         if (MatchesFeatureQuery("Pause On Complete", q)) bMatches++;
+        if (MatchesFeatureQuery("Hide Pause Menu", q)) bMatches++;
+        if (MatchesFeatureQuery("Mouse Zoom on Pause", q)) bMatches++;
 
         if (bMatches > 0) {
             totalMatches += bMatches;
@@ -356,6 +364,12 @@ static void DrawFeatureSearchResults(const char* q) {
                         gui.slider_float("Respawn Time", &Vars::respawnTime, 0.05f, 5.0f, "%.2fs");
                 }
                 if (MatchesFeatureQuery("Pause On Complete", q)) gui.toggle("Pause On Complete", &Vars::pauseDuringComplete);
+                if (MatchesFeatureQuery("Hide Pause Menu", q)) gui.toggle("Hide Pause Menu", &Vars::hidePauseMenu);
+                if (MatchesFeatureQuery("Mouse Zoom on Pause", q)) {
+                    const bool zoomModLoaded = geode::Loader::get()->isModLoaded("bobby_shmurner.zoom");
+                    gui.toggle("Mouse Zoom on Pause", &Vars::mouseZoomOnPause);
+                    if (zoomModLoaded) TextDisabled("Zoooom! mod is already active");
+                }
             } gui.end_group_box();
             Dummy(ImVec2(0.f, 8.f));
         }
@@ -789,8 +803,8 @@ void DrawFrameWorkGUI()
                 auto statusItem = [&](const char* label, const char* id, int* posVal) {
                     ImGui::PushID(id);
                     ImGui::TextUnformatted(label);
-                    ImGui::SameLine(ImGui::GetWindowWidth() - 95.f);
-                    ImGui::PushItemWidth(85.f);
+                    ImGui::SameLine(ImGui::GetWindowWidth() - 120.f);
+                    ImGui::PushItemWidth(110.f);
                     ImGui::Combo("##pos", posVal, pos_names, IM_ARRAYSIZE(pos_names));
                     ImGui::PopItemWidth();
                     ImGui::PopID();
@@ -831,8 +845,8 @@ void DrawFrameWorkGUI()
                             const char* const mode_names[] = { "Dot", "Text" };
                             ImGui::PushID("ci_mode");
                             ImGui::TextUnformatted("Indicator Mode");
-                            ImGui::SameLine(ImGui::GetWindowWidth() - 95.f);
-                            ImGui::PushItemWidth(85.f);
+                            ImGui::SameLine(ImGui::GetWindowWidth() - 120.f);
+                            ImGui::PushItemWidth(110.f);
                             ImGui::Combo("##mode", &Vars::statusCheatIndicatorMode, mode_names, IM_ARRAYSIZE(mode_names));
                             ImGui::PopItemWidth();
                             ImGui::PopID();
@@ -1046,6 +1060,9 @@ void DrawFrameWorkGUI()
                 if (Vars::waveTrailSize)
                     gui.slider_float("Size", &Vars::waveTrailSizeValue, 0.1f, 5.0f, "%.1fx");
                 gui.toggle("No Shader", &Vars::noShader);
+                gui.toggle("No Camera Shake", &Vars::noCameraShake);
+                gui.toggle("No End Shake", &Vars::noEndShake);
+                gui.toggle("No Death Shake", &Vars::noDeathShake);
 
                 gui.toggle("Hide Complete VFX", &Vars::hideLevelCompleteVfx);
                 gui.toggle("No Music Fade Out", &Vars::noMusicFadeOut);
@@ -1112,6 +1129,12 @@ void DrawFrameWorkGUI()
                     gui.slider_float("Respawn Time", &Vars::respawnTime, 0.05f, 5.0f, "%.2fs");
                 }
                 gui.toggle("Pause On Complete", &Vars::pauseDuringComplete);
+                gui.toggle("Hide Pause Menu", &Vars::hidePauseMenu);
+                const bool zoomModLoaded = geode::Loader::get()->isModLoaded("bobby_shmurner.zoom");
+                gui.toggle("Mouse Zoom on Pause", &Vars::mouseZoomOnPause);
+                if (zoomModLoaded) {
+                    TextDisabled("Zoooom! mod is already active");
+                }
 
             } gui.end_group_box();
 

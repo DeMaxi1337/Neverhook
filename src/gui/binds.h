@@ -1097,13 +1097,17 @@ public:
         registerBool("Click Between Frames", &Vars::clickBetweenFrames);
         category("COSMETIC > EFFECTS");
         registerBool("No Shader", &Vars::noShader);
-
+        registerBool("No Camera Shake", &Vars::noCameraShake);
+        registerBool("No End Shake", &Vars::noEndShake);
+        registerBool("No Death Shake", &Vars::noDeathShake);
         registerBool("Hide Complete VFX", &Vars::hideLevelCompleteVfx);
         registerBool("No Music Fade Out", &Vars::noMusicFadeOut);
         category("LEVEL > AUTOMATION");
         registerBool("Auto Practice Mode", &Vars::autoPracticeMode);
         registerBool("Auto Pickup Coins", &Vars::autoPickupCoins);
         registerBool("Pause On Complete", &Vars::pauseDuringComplete);
+        registerBool("Hide Pause Menu", &Vars::hidePauseMenu);
+        registerBool("Mouse Zoom on Pause", &Vars::mouseZoomOnPause);
         registerBool("Auto Song Download", &Vars::autoSongDownload);
         category("LEVEL > MISC");
         registerBool("Layout Mode", &Vars::layoutMode);

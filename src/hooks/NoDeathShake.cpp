@@ -4,28 +4,21 @@
 
 using namespace geode::prelude;
 
-class $modify(NHNoEndShake, PlayLayer) {
-    void showCompleteEffect() {
+class $modify(NHNoDeathShake, PlayLayer) {
+    void destroyPlayer(PlayerObject* player, GameObject* object) {
         auto& cfg = Config::get();
-        if (!cfg.noEndShake && !cfg.noCameraShake) {
-            PlayLayer::showCompleteEffect();
+        if (!cfg.noDeathShake && !cfg.noCameraShake) {
+            PlayLayer::destroyPlayer(player, object);
             return;
         }
 
         const bool  prevEnabled = m_gameState.m_cameraShakeEnabled;
         const float prevFactor  = m_gameState.m_cameraShakeFactor;
 
-        PlayLayer::showCompleteEffect();
+        PlayLayer::destroyPlayer(player, object);
 
         m_gameState.m_cameraShakeEnabled = prevEnabled;
         m_gameState.m_cameraShakeFactor  = prevFactor;
         this->stopCameraShake();
-    }
-
-    void playEndAnimationToPos(cocos2d::CCPoint pos) {
-        PlayLayer::playEndAnimationToPos(pos);
-        if (Config::get().noEndShake || Config::get().noCameraShake) {
-            this->stopCameraShake();
-        }
     }
 };

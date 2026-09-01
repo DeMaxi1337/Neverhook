@@ -3,7 +3,7 @@
 # v2.0.7-beta
 
 **New Features:**
-- Added a Status Overlay (a la Label from Mega Hack: HUD with 18 elements)
+- Added a Status Overlay (like Label from Mega Hack: HUD with 18 elements)
 - Added automatic disabling of Click Between Frames (CBF) when recording macros
 **Fixes:**
 - Improved Show Trajectory

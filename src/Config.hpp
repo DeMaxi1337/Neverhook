@@ -32,6 +32,7 @@ struct Config {
     bool  noGlow                = false;
     bool  noCameraShake         = false;
     bool  noEndShake            = false;
+    bool  noDeathShake          = false;
     bool  showHitboxes          = false;
     bool  showHitboxesOnDeath   = false;
     bool  showTrajectory        = false;
@@ -145,6 +146,8 @@ struct Config {
     bool  autoPracticeMode = false;
     bool  autoPickupCoins = false;
     bool  pauseDuringComplete = false;
+    bool  hidePauseMenu = false;
+    bool  mouseZoomOnPause = false;
     bool  autoSongDownload = false;
     bool  layoutMode = false;
     bool  unlockMainLevels = false;

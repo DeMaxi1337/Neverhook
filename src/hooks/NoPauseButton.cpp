@@ -7,8 +7,16 @@ using namespace geode::prelude;
 class $modify(NHNoPauseButton, UILayer) {
     bool init(GJBaseGameLayer* layer) {
         if (!UILayer::init(layer)) return false;
-        if (Config::get().noPauseButton && m_pauseBtn)
-            m_pauseBtn->setVisible(false);
+        this->schedule(schedule_selector(NHNoPauseButton::updatePauseBtn));
         return true;
+    }
+
+    void updatePauseBtn(float dt) {
+        if (m_pauseBtn) {
+            bool target = !Config::get().noPauseButton;
+            if (m_pauseBtn->isVisible() != target) {
+                m_pauseBtn->setVisible(target);
+            }
+        }
     }
 };

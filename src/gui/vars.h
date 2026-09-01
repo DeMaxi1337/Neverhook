@@ -30,6 +30,7 @@ namespace Vars {
     inline bool&  noGlow                = Config::get().noGlow;
     inline bool&  noCameraShake         = Config::get().noCameraShake;
     inline bool&  noEndShake            = Config::get().noEndShake;
+    inline bool&  noDeathShake          = Config::get().noDeathShake;
     inline bool&  showHitboxes          = Config::get().showHitboxes;
     inline bool&  showHitboxesOnDeath   = Config::get().showHitboxesOnDeath;
     inline bool&  showTrajectory        = Config::get().showTrajectory;
@@ -127,6 +128,8 @@ namespace Vars {
     inline bool&  autoPracticeMode = Config::get().autoPracticeMode;
     inline bool&  autoPickupCoins = Config::get().autoPickupCoins;
     inline bool&  pauseDuringComplete = Config::get().pauseDuringComplete;
+    inline bool&  hidePauseMenu = Config::get().hidePauseMenu;
+    inline bool&  mouseZoomOnPause = Config::get().mouseZoomOnPause;
     inline bool&  autoSongDownload = Config::get().autoSongDownload;
     inline bool&  layoutMode = Config::get().layoutMode;
     inline bool&  unlockMainLevels = Config::get().unlockMainLevels;

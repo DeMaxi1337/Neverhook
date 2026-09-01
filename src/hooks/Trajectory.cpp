@@ -1,5 +1,6 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/PlayLayer.hpp>
+#include <Geode/modify/CCScheduler.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
@@ -738,3 +739,14 @@ class $modify(NHTrajEffect, EffectGameObject) {
         EffectGameObject::triggerObject(layer, p1, p2);
     }
 };
+
+class $modify(NHTrajScheduler, CCScheduler) {
+    virtual void update(float dt) {
+        CCScheduler::update(dt);
+        auto* pl = PlayLayer::get();
+        if (pl && pl->m_isPaused) {
+            Simulation::get().tick(pl);
+        }
+    }
+};
+

@@ -1,5 +1,6 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/PlayLayer.hpp>
+#include <Geode/modify/CCScheduler.hpp>
 
 #include "../Config.hpp"
 
@@ -250,6 +251,16 @@ class $modify(NHHitboxHook, PlayLayer) {
         NHHitboxNode* node = nullptr;
     };
 
+    bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
+        if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
+        if (m_objectLayer) {
+            m_fields->node = NHHitboxNode::create();
+            if (m_fields->node)
+                m_objectLayer->addChild(m_fields->node, 1000);
+        }
+        return true;
+    }
+
     void postUpdate(float dt) {
         PlayLayer::postUpdate(dt);
 
@@ -263,3 +274,18 @@ class $modify(NHHitboxHook, PlayLayer) {
             m_fields->node->rebuild();
     }
 };
+
+class $modify(NHHitboxScheduler, CCScheduler) {
+    virtual void update(float dt) {
+        CCScheduler::update(dt);
+        auto* pl = PlayLayer::get();
+        if (pl && pl->m_isPaused) {
+            if (auto* hook = static_cast<NHHitboxHook*>(static_cast<PlayLayer*>(pl))) {
+                if (hook->m_fields->node) {
+                    hook->m_fields->node->rebuild();
+                }
+            }
+        }
+    }
+};
+

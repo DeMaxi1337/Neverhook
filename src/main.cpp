@@ -49,6 +49,7 @@ void Config::load() {
     NH_LOAD_VAL(noGlow, false);
     NH_LOAD_VAL(noCameraShake, false);
     NH_LOAD_VAL(noEndShake, false);
+    NH_LOAD_VAL(noDeathShake, false);
     NH_LOAD_VAL(showHitboxes, false);
     NH_LOAD_VAL(showHitboxesOnDeath, false);
     NH_LOAD_VAL(showTrajectory, false);
@@ -60,6 +61,8 @@ void Config::load() {
     NH_LOAD_VAL(autoPracticeMode, false);
     NH_LOAD_VAL(autoPickupCoins, false);
     NH_LOAD_VAL(pauseDuringComplete, false);
+    NH_LOAD_VAL(hidePauseMenu, false);
+    NH_LOAD_VAL(mouseZoomOnPause, false);
     NH_LOAD_VAL(autoSongDownload, false);
     NH_LOAD_VAL(layoutMode, false);
     NH_LOAD_VAL(unlockMainLevels, false);
@@ -217,6 +220,7 @@ void Config::save() {
     NH_SAVE_VAL(noGlow);
     NH_SAVE_VAL(noCameraShake);
     NH_SAVE_VAL(noEndShake);
+    NH_SAVE_VAL(noDeathShake);
     NH_SAVE_VAL(showHitboxes);
     NH_SAVE_VAL(showHitboxesOnDeath);
     NH_SAVE_VAL(showTrajectory);
@@ -228,6 +232,8 @@ void Config::save() {
     NH_SAVE_VAL(autoPracticeMode);
     NH_SAVE_VAL(autoPickupCoins);
     NH_SAVE_VAL(pauseDuringComplete);
+    NH_SAVE_VAL(hidePauseMenu);
+    NH_SAVE_VAL(mouseZoomOnPause);
     NH_SAVE_VAL(autoSongDownload);
     NH_SAVE_VAL(layoutMode);
     NH_SAVE_VAL(unlockMainLevels);

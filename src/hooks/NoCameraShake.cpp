@@ -6,7 +6,10 @@ using namespace geode::prelude;
 
 class $modify(NHShakeLayer, GJBaseGameLayer) {
     void shakeCamera(float duration, float strength, float interval) {
-        if (Config::get().noCameraShake) return;
+        auto& cfg = Config::get();
+        if (cfg.noCameraShake) return;
+        if (cfg.noDeathShake && (m_player1 && m_player1->m_isDead)) return;
+        if (cfg.noEndShake && m_levelEndAnimationStarted) return;
         GJBaseGameLayer::shakeCamera(duration, strength, interval);
     }
 };

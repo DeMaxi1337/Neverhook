@@ -3,6 +3,7 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/modify/PlayLayer.hpp>
+#include <Geode/modify/PlayerObject.hpp>
 #include <Geode/modify/UILayer.hpp>
 #include <imgui.h>
 #include <chrono>
@@ -16,12 +17,22 @@
 
 namespace nh::status {
 
-inline auto g_sessionStart = std::chrono::steady_clock::now();
+inline auto g_levelSessionStart = std::chrono::steady_clock::now();
 inline std::vector<std::chrono::steady_clock::time_point> g_clicksP1;
 inline std::vector<std::chrono::steady_clock::time_point> g_clicksP2;
 
 inline float g_bestStart = 0.f;
 inline float g_bestEnd = 0.f;
+inline int g_levelAttempts = 1;
+inline int g_levelJumps = 0;
+
+inline float safePercent(PlayLayer* pl) {
+    if (!pl) return 0.f;
+    float pct = pl->getCurrentPercent();
+    if (std::isnan(pct) || std::isinf(pct) || pct < 0.f) return 0.f;
+    if (pct > 100.f) return 100.f;
+    return pct;
+}
 
 inline void recordClick(bool player1) {
     auto now = std::chrono::steady_clock::now();
@@ -80,14 +91,29 @@ class $modify(NHStatusBGL, ::GJBaseGameLayer) {
 class $modify(NHStatusPlayLayer, ::PlayLayer) {
     bool init(::GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
         if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
-        nh::status::g_bestStart = PlayLayer::getCurrentPercent();
-        nh::status::g_bestEnd = PlayLayer::getCurrentPercent();
+        nh::status::g_levelAttempts = 1;
+        nh::status::g_levelJumps = 0;
+        nh::status::g_levelSessionStart = std::chrono::steady_clock::now();
+        float p = nh::status::safePercent(this);
+        nh::status::g_bestStart = p;
+        nh::status::g_bestEnd = p;
         return true;
     }
 
     void resetLevel() {
         PlayLayer::resetLevel();
-        nh::status::g_bestStart = PlayLayer::getCurrentPercent();
+        nh::status::g_levelAttempts++;
+        float p = nh::status::safePercent(this);
+        nh::status::g_bestStart = p;
+    }
+};
+
+class $modify(NHStatusPO, ::PlayerObject) {
+    void incrementJumps() {
+        if (::PlayLayer::get()) {
+            nh::status::g_levelJumps++;
+        }
+        PlayerObject::incrementJumps();
     }
 };
 
@@ -165,8 +191,10 @@ class $modify(NHStatusUILayer, ::UILayer) {
                 break;
             case 3:
                 if (Vars::statusBestRun > 0 && playLayer) {
-                    float cur = playLayer->getCurrentPercent();
-                    if (cur > nh::status::g_bestEnd)
+                    float cur = nh::status::safePercent(playLayer);
+                    if (std::isnan(nh::status::g_bestStart) || std::isinf(nh::status::g_bestStart))
+                        nh::status::g_bestStart = cur;
+                    if (std::isnan(nh::status::g_bestEnd) || std::isinf(nh::status::g_bestEnd) || cur > nh::status::g_bestEnd)
                         nh::status::g_bestEnd = cur;
                     char buf[48];
                     snprintf(buf, sizeof(buf), "Best: %.0f%% - %.0f%%", nh::status::g_bestStart, nh::status::g_bestEnd);
@@ -174,37 +202,37 @@ class $modify(NHStatusUILayer, ::UILayer) {
                 }
                 break;
             case 4:
-                if (Vars::statusNoclipAcc > 0 && playLayer) {
+                if (Vars::statusNoclipAcc > 0 && Vars::noclip && playLayer) {
                     char buf[32];
-                    snprintf(buf, sizeof(buf), "Acc: 100.00%%");
+                    snprintf(buf, sizeof(buf), "Acc: %.2f%%", Vars::noclipAccuracy);
                     add(Vars::statusNoclipAcc, buf, white);
                 }
                 break;
             case 5:
-                if (Vars::statusNoclipDeaths > 0 && playLayer) {
+                if (Vars::statusNoclipDeaths > 0 && Vars::noclip && playLayer) {
                     char buf[32];
-                    snprintf(buf, sizeof(buf), "Deaths: 0");
+                    snprintf(buf, sizeof(buf), "Deaths: %d", Vars::noclipDeaths);
                     add(Vars::statusNoclipDeaths, buf, white);
                 }
                 break;
             case 6:
-                if (Vars::statusAttempts > 0 && playLayer && playLayer->m_level) {
+                if (Vars::statusAttempts > 0 && playLayer) {
                     char buf[32];
-                    snprintf(buf, sizeof(buf), "Attempt %d", (int)playLayer->m_level->m_attempts);
+                    snprintf(buf, sizeof(buf), "Attempt %d", nh::status::g_levelAttempts);
                     add(Vars::statusAttempts, buf, white);
                 }
                 break;
             case 7:
                 if (Vars::statusJumps > 0 && playLayer) {
                     char buf[32];
-                    snprintf(buf, sizeof(buf), "Jumps: %d", playLayer->m_jumps);
+                    snprintf(buf, sizeof(buf), "Jumps: %d", nh::status::g_levelJumps);
                     add(Vars::statusJumps, buf, white);
                 }
                 break;
             case 8:
                 if (Vars::statusPercentage > 0 && playLayer) {
                     char buf[32];
-                    snprintf(buf, sizeof(buf), "%.2f%%", playLayer->getCurrentPercent());
+                    snprintf(buf, sizeof(buf), "%.2f%%", nh::status::safePercent(playLayer));
                     add(Vars::statusPercentage, buf, white);
                 }
                 break;
@@ -221,7 +249,7 @@ class $modify(NHStatusUILayer, ::UILayer) {
             case 10:
                 if (Vars::statusSessionTime > 0) {
                     auto now = std::chrono::steady_clock::now();
-                    int totalSec = (int)std::chrono::duration<float>(now - nh::status::g_sessionStart).count();
+                    int totalSec = (int)std::chrono::duration<float>(now - nh::status::g_levelSessionStart).count();
                     int h = totalSec / 3600;
                     int m = (totalSec % 3600) / 60;
                     int s = totalSec % 60;
@@ -248,7 +276,7 @@ class $modify(NHStatusUILayer, ::UILayer) {
             case 12:
                 if (Vars::statusFrameCounter > 0 && playLayer) {
                     char buf[32];
-                    snprintf(buf, sizeof(buf), "Frame: %d", playLayer->m_gameState.m_currentProgress);
+                    snprintf(buf, sizeof(buf), "Frame: %d", playLayer->m_gameState.m_currentProgress / 2);
                     add(Vars::statusFrameCounter, buf, white);
                 }
                 break;
@@ -306,7 +334,7 @@ class $modify(NHStatusUILayer, ::UILayer) {
                 label->setColor(entry.color);
                 label->setOpacity(opacity);
 
-                float dotYOffset = entry.isDot ? (27.f * scale) : 0.f;
+                float dotYOffset = entry.isDot ? (37.f * scale) : 0.f;
                 float dotXOffset = entry.isDot ? (2.f * scale) : 0.f;
 
                 switch (p) {
@@ -328,7 +356,7 @@ class $modify(NHStatusUILayer, ::UILayer) {
                     break;
                 case 5:
                     label->setAnchorPoint({ 0.5f, 1.f });
-                    label->setPosition({ winSize.width * 0.5f, winSize.height - margin - (i * lineSpacing) + dotYOffset });
+                    label->setPosition({ winSize.width * 0.5f, winSize.height - margin - 14.f - (i * lineSpacing) + dotYOffset });
                     break;
                 case 6:
                     label->setAnchorPoint({ 0.5f, 0.f });
