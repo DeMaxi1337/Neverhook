@@ -16,6 +16,8 @@ class $modify(NHSpeedhackAudio, FMODAudioEngine) {
                       && Config::get().speedhack
                       && Config::get().speedhackValue > 0.f;
 
+        if (!active && !m_fields->applied) return;
+
         FMOD::ChannelGroup* masterGroup = nullptr;
         if (m_system->getMasterChannelGroup(&masterGroup) != FMOD_OK) return;
 

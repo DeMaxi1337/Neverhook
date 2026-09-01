@@ -8,6 +8,7 @@ using namespace geode::prelude;
 
 class $modify(NHUnlockShops, GameManager) {
     bool getUGV(const char* key) {
+        if (!key) return false;
         if (GameManager::getUGV(key)) return true;
         if (!Config::get().unlockShops) return false;
         return std::strcmp(key, "11") == 0 || std::strcmp(key, "20") == 0

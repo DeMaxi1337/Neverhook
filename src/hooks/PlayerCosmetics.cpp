@@ -22,7 +22,7 @@ class $modify(NHCosmeticPlayer, PlayerObject) {
         if (c.hidePlayer)
             this->setVisible(false);
 
-        if (c.playerOnTop)
+        if (c.playerOnTop && this->getZOrder() != 1000)
             this->setZOrder(1000);
 
         if (c.noRobotFire && m_robotFire)

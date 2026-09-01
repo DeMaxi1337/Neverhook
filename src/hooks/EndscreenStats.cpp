@@ -154,9 +154,8 @@ class $modify(NHEndLevelLayer, EndLevelLayer) {
                         if (local.y < statBotY) statBotY = local.y;
                     }
                 }
+                lbl->setVisible(false);
             }
-
-            lbl->setVisible(false);
         }
 
         std::vector<std::string> leftText;

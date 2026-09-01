@@ -120,6 +120,8 @@ class $modify(NHStatusPO, ::PlayerObject) {
 class $modify(NHStatusUILayer, ::UILayer) {
     struct Fields {
         cocos2d::CCNode* m_statusContainer = nullptr;
+        std::vector<cocos2d::CCLabelBMFont*> m_labelPool;
+        std::string m_lastFont;
     };
 
     bool init(::GJBaseGameLayer* bgl) {
@@ -135,12 +137,21 @@ class $modify(NHStatusUILayer, ::UILayer) {
 
     void updateStatusLabels(float dt) {
         if (!m_fields->m_statusContainer) return;
-        m_fields->m_statusContainer->removeAllChildren();
 
-        if (Vars::hideStatus) return;
+        if (Vars::hideStatus) {
+            for (auto* lbl : m_fields->m_labelPool) {
+                if (lbl) lbl->setVisible(false);
+            }
+            return;
+        }
 
         auto game = ::GJBaseGameLayer::get();
-        if (!game) return;
+        if (!game) {
+            for (auto* lbl : m_fields->m_labelPool) {
+                if (lbl) lbl->setVisible(false);
+            }
+            return;
+        }
         auto playLayer = ::PlayLayer::get();
 
         nh::status::cleanOldClicks();
@@ -149,6 +160,12 @@ class $modify(NHStatusUILayer, ::UILayer) {
         const GLubyte opacity = (GLubyte)std::clamp((int)(Vars::statusOpacity * 2.55f), 0, 255);
         const bool cheated = nh::status::isGameCheated();
         const char* font = nh::status::getFontFile();
+
+        if (m_fields->m_lastFont != font) {
+            m_fields->m_statusContainer->removeAllChildren();
+            m_fields->m_labelPool.clear();
+            m_fields->m_lastFont = font;
+        }
 
         std::vector<nh::status::StatusEntry> groups[7];
 
@@ -320,13 +337,29 @@ class $modify(NHStatusUILayer, ::UILayer) {
         const float margin = 4.f;
         const float lineSpacing = 32.f * scale;
 
+        size_t labelIdx = 0;
+
         for (int p = 1; p <= 6; ++p) {
             const auto& lines = groups[p];
             if (lines.empty()) continue;
 
             for (size_t i = 0; i < lines.size(); ++i) {
                 const auto& entry = lines[i];
-                auto* label = cocos2d::CCLabelBMFont::create(entry.text.c_str(), font);
+
+                cocos2d::CCLabelBMFont* label = nullptr;
+                if (labelIdx < m_fields->m_labelPool.size()) {
+                    label = m_fields->m_labelPool[labelIdx];
+                    if (label) {
+                        label->setVisible(true);
+                        label->setString(entry.text.c_str());
+                    }
+                } else {
+                    label = cocos2d::CCLabelBMFont::create(entry.text.c_str(), font);
+                    if (!label) continue;
+                    m_fields->m_statusContainer->addChild(label);
+                    m_fields->m_labelPool.push_back(label);
+                }
+
                 if (!label) continue;
 
                 float itemScale = entry.isDot ? (scale * 2.4f) : scale;
@@ -364,7 +397,13 @@ class $modify(NHStatusUILayer, ::UILayer) {
                     break;
                 }
 
-                m_fields->m_statusContainer->addChild(label);
+                labelIdx++;
+            }
+        }
+
+        for (size_t k = labelIdx; k < m_fields->m_labelPool.size(); ++k) {
+            if (m_fields->m_labelPool[k]) {
+                m_fields->m_labelPool[k]->setVisible(false);
             }
         }
     }

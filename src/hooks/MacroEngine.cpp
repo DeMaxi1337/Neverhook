@@ -126,6 +126,10 @@ bool MacroEngine::load(const std::string& name) {
 
     uint32_t count = 0;
     fd.read(reinterpret_cast<char*>(&count), sizeof(count));
+    if (count > 5000000) {
+        log::error("macro: {} contains invalid action count {}", name, count);
+        return false;
+    }
 
     std::vector<MacroInput> loaded;
     loaded.reserve(count);

@@ -90,6 +90,9 @@ class $modify(NHFrameExtrapolation, GJBaseGameLayer) {
     }
 
     double getModifiedDelta(float dt) {
+        if (!Config::get().frameExtrapolation)
+            return GJBaseGameLayer::getModifiedDelta(dt);
+
         double consumed = GJBaseGameLayer::getModifiedDelta(dt);
         if (consumed > 0.0) {
             double per = tickSeconds();

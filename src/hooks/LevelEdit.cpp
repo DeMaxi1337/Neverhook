@@ -8,14 +8,19 @@ using namespace geode::prelude;
 
 class $modify(NHLevelEditPauseLayer, PauseLayer) {
     void customSetup() {
-        auto level = GJBaseGameLayer::get()->m_level;
+        if (!Config::get().levelEdit) {
+            PauseLayer::customSetup();
+            return;
+        }
+        auto bgl = GJBaseGameLayer::get();
+        GJGameLevel* level = bgl ? bgl->m_level : nullptr;
+        if (!level) {
+            PauseLayer::customSetup();
+            return;
+        }
         auto lType = level->m_levelType;
-
-        if (Config::get().levelEdit)
-            level->m_levelType = GJLevelType::Editor;
-
+        level->m_levelType = GJLevelType::Editor;
         PauseLayer::customSetup();
-
         level->m_levelType = lType;
     }
 
@@ -28,14 +33,19 @@ class $modify(NHLevelEditPauseLayer, PauseLayer) {
 
 class $modify(NHLevelEditEditorPauseLayer, EditorPauseLayer) {
     void customSetup() {
-        auto level = GJBaseGameLayer::get()->m_level;
+        if (!Config::get().levelEdit) {
+            EditorPauseLayer::customSetup();
+            return;
+        }
+        auto bgl = GJBaseGameLayer::get();
+        GJGameLevel* level = bgl ? bgl->m_level : nullptr;
+        if (!level) {
+            EditorPauseLayer::customSetup();
+            return;
+        }
         auto lType = level->m_levelType;
-
-        if (Config::get().levelEdit)
-            level->m_levelType = GJLevelType::Editor;
-
+        level->m_levelType = GJLevelType::Editor;
         EditorPauseLayer::customSetup();
-
         level->m_levelType = lType;
     }
 };

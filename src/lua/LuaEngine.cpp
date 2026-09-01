@@ -216,6 +216,7 @@ bool Script::pcall(int nargs, int nresults, const char* what) {
         const char* msg = lua_tostring(m_L, -1);
         m_lastError = msg ? msg : "unknown error";
         lua_pop(m_L, 1);
+        closeImguiScopes();
         Manager::get().log(m_fileName + " [" + what + "]: " + m_lastError, true);
         return false;
     }
@@ -273,6 +274,7 @@ bool Script::start() {
 }
 
 void Script::stop() {
+    closeImguiScopes();
     if (!m_L) return;
 
     lua_close(m_L);

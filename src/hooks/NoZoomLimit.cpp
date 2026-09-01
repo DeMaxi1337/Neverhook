@@ -6,6 +6,7 @@ using namespace geode::prelude;
 
 class $modify(NHNoZoomLimit, EditorUI) {
     void zoomNoLimit(bool zoomingIn) {
+        if (!m_editorLayer || !m_editorLayer->m_groundLayer) return;
         float scale = m_editorLayer->m_groundLayer->getScale();
         scale += zoomingIn ? 0.1f : -0.1f;
         scale = std::max<float>(scale, 0.1f);
@@ -23,6 +24,11 @@ class $modify(NHNoZoomLimit, EditorUI) {
     }
 
     void scrollWheel(float y, float x) {
+        if (!m_editorLayer || !m_editorLayer->m_groundLayer) {
+            EditorUI::scrollWheel(y, x);
+            return;
+        }
+
         auto scale = m_editorLayer->m_groundLayer->getScale();
 
         EditorUI::scrollWheel(y, x);

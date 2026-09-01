@@ -29,6 +29,7 @@ const char* eventName(Event e);
 bool        eventFromName(const char* name, Event& out);
 
 void pollLevelEvents();
+void closeImguiScopes();
 
 enum class WidgetType {
     Toggle, Slider, SliderInt, Combo, Button, Label, Separator,

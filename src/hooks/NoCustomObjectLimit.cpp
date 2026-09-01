@@ -12,9 +12,10 @@ class $modify(NHNoCustomObjLimit, EditorUI) {
         }
 
         CCArray* objs = m_selectedObjects;
-        if (m_selectedObjects->count() == 0) {
+        if (!objs || objs->count() == 0) {
             objs = CCArray::create();
-            objs->addObject(m_selectedObject);
+            if (m_selectedObject)
+                objs->addObject(m_selectedObject);
         }
 
         GameManager::get()->addNewCustomObject(copyObjects(objs, false, false));

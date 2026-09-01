@@ -1,6 +1,5 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/PlayLayer.hpp>
-#include <Geode/modify/CCScheduler.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
@@ -504,8 +503,6 @@ private:
                             activated.insert(obj);
                             if (auto ring = typeinfo_cast<RingObject*>(obj)) {
                                 ghost->ringJump(ring, true);
-                            } else {
-                                ghost->ringJump(reinterpret_cast<RingObject*>(obj), true);
                             }
                         }
                     }
@@ -525,8 +522,9 @@ private:
 
         GJGameState savedState = game->m_gameState;
 
+        bool isPlayLayer = (typeinfo_cast<PlayLayer*>(game) != nullptr);
         EffectManagerState savedEffects;
-        bool hasEffects = (game->m_effectManager != nullptr) && (typeinfo_cast<PlayLayer*>(game) != nullptr);
+        bool hasEffects = (game->m_effectManager != nullptr) && isPlayLayer;
         if (hasEffects) game->m_effectManager->saveToState(savedEffects);
 
         copyState(real, ghost);
@@ -547,7 +545,7 @@ private:
 
         int steps = 0;
         for (int i = 0; i < kMaxSteps; i++) {
-            if (!step(game, ghost, colour, width, mode, activated)) break;
+            if (!step(game, ghost, colour, width, mode, activated, isPlayLayer)) break;
             steps++;
             if (first ? m_dead1 : m_dead2) break;
         }
@@ -560,7 +558,7 @@ private:
         hideGhostSprites(ghost);
     }
 
-    bool step(GJBaseGameLayer* game, PlayerObject* ghost, ccColor4F const& colour, float width, int mode, std::unordered_set<void*>& activated) {
+    bool step(GJBaseGameLayer* game, PlayerObject* ghost, ccColor4F const& colour, float width, int mode, std::unordered_set<void*>& activated, bool isPlayLayer) {
         const CCPoint from = ghost->getPosition();
 
         game->m_gameState.m_currentProgress++;
@@ -583,7 +581,7 @@ private:
             return false;
         }
 
-        if (game->m_effectManager && typeinfo_cast<PlayLayer*>(game)) {
+        if (game->m_effectManager && isPlayLayer) {
             game->m_effectManager->postCollisionCheck();
         }
 
@@ -737,16 +735,6 @@ class $modify(NHTrajEffect, EffectGameObject) {
     void triggerObject(GJBaseGameLayer* layer, int p1, const gd::vector<int>* p2) {
         if (Simulation::get().drawing()) return;
         EffectGameObject::triggerObject(layer, p1, p2);
-    }
-};
-
-class $modify(NHTrajScheduler, CCScheduler) {
-    virtual void update(float dt) {
-        CCScheduler::update(dt);
-        auto* pl = PlayLayer::get();
-        if (pl && pl->m_isPaused) {
-            Simulation::get().tick(pl);
-        }
     }
 };
 

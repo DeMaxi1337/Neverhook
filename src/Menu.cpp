@@ -26,10 +26,8 @@ class $modify(NHKeyboard, cocos2d::CCKeyboardDispatcher) {
     bool dispatchKeyboardMSG(cocos2d::enumKeyCodes key, bool isKeyDown, bool isKeyRepeat, double timestamp) {
         if ((key == cocos2d::enumKeyCodes::KEY_Insert || key == cocos2d::enumKeyCodes::KEY_Tab) && isKeyDown && !isKeyRepeat) {
             Vars::menuOpen = !Vars::menuOpen;
-            if (!Vars::menuOpen) {
-                ImGui::ClearActiveID();
-                ImGui::SetWindowFocus(nullptr);
-            }
+            ImGui::ClearActiveID();
+            ImGui::SetWindowFocus(nullptr);
             return true;
         }
 

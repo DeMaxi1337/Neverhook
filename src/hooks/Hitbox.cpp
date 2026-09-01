@@ -1,6 +1,5 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/PlayLayer.hpp>
-#include <Geode/modify/CCScheduler.hpp>
 
 #include "../Config.hpp"
 
@@ -104,10 +103,10 @@ public:
     }
 
 private:
-    bool drawable(GameObject* o) {
+    Kind classifyDrawable(GameObject* o) {
         if (!o || o->m_isDecoration || o->m_isDecoration2 || o->m_unk3ee)
-            return false;
-        return classify(o) != Kind::Skip;
+            return Kind::Skip;
+        return classify(o);
     }
 
     cocos2d::CCRect rectOf(GameObject* o) {
@@ -122,8 +121,8 @@ private:
         return o->m_objectRect;
     }
 
-    void strokeObject(GameObject* o) {
-        auto col = strokeColour(classify(o));
+    void strokeObject(GameObject* o, Kind k) {
+        auto col = strokeColour(k);
         ccColor4F hollow = { col.r, col.g, col.b, 0.f };
 
         if (o->m_objectRadius != 0) {
@@ -239,7 +238,8 @@ private:
                     if (obj == game->m_player1CollisionBlock) continue;
                     if (obj == game->m_player2CollisionBlock) continue;
                     if (obj == game->m_anticheatSpike) continue;
-                    if (drawable(obj)) strokeObject(obj);
+                    Kind kind = classifyDrawable(obj);
+                    if (kind != Kind::Skip) strokeObject(obj, kind);
                 }
             }
         }
@@ -264,27 +264,23 @@ class $modify(NHHitboxHook, PlayLayer) {
     void postUpdate(float dt) {
         PlayLayer::postUpdate(dt);
 
+        if (!Config::get().showHitboxes && !Config::get().showHitboxesOnDeath) {
+            if (m_fields->node && m_fields->node->isVisible()) {
+                m_fields->node->clear();
+                m_fields->node->setVisible(false);
+            }
+            return;
+        }
+
         if (!m_fields->node && m_objectLayer) {
             m_fields->node = NHHitboxNode::create();
             if (m_fields->node)
                 m_objectLayer->addChild(m_fields->node, 1000);
         }
 
-        if (m_fields->node)
+        if (m_fields->node) {
+            m_fields->node->setVisible(true);
             m_fields->node->rebuild();
-    }
-};
-
-class $modify(NHHitboxScheduler, CCScheduler) {
-    virtual void update(float dt) {
-        CCScheduler::update(dt);
-        auto* pl = PlayLayer::get();
-        if (pl && pl->m_isPaused) {
-            if (auto* hook = static_cast<NHHitboxHook*>(static_cast<PlayLayer*>(pl))) {
-                if (hook->m_fields->node) {
-                    hook->m_fields->node->rebuild();
-                }
-            }
         }
     }
 };

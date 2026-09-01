@@ -126,11 +126,17 @@ inline char g_featureSearch[64] = "";
 inline bool MatchesFeatureQuery(const char* label, const char* query) {
     if (!query || query[0] == '\0') return true;
     if (!label) return false;
-    std::string l = label;
-    std::string q = query;
-    for (auto& c : l) c = (char)::tolower((unsigned char)c);
-    for (auto& c : q) c = (char)::tolower((unsigned char)c);
-    return l.find(q) != std::string::npos;
+    while (*label) {
+        const char* h = label;
+        const char* n = query;
+        while (*h && *n && (::tolower((unsigned char)*h) == ::tolower((unsigned char)*n))) {
+            h++;
+            n++;
+        }
+        if (!*n) return true;
+        label++;
+    }
+    return false;
 }
 
 static void DrawFeatureSearchResults(const char* q) {
@@ -176,7 +182,15 @@ static void DrawFeatureSearchResults(const char* q) {
                 }
                 if (MatchesFeatureQuery("No Death Effect", q)) gui.toggle("No Death Effect", &Vars::noDeathEffect);
                 if (MatchesFeatureQuery("No Respawn Flash", q)) gui.toggle("No Respawn Flash", &Vars::noRespawnFlash);
-                if (MatchesFeatureQuery("No Pause Button", q)) gui.toggle("No Pause Button", &Vars::noPauseButton);
+                if (MatchesFeatureQuery("No Pause Button", q)) {
+                    if (gui.toggle("No Pause Button", &Vars::noPauseButton)) {
+                        if (auto pl = PlayLayer::get()) {
+                            if (auto ui = pl->m_uiLayer) {
+                                if (ui->m_pauseBtn) ui->m_pauseBtn->setVisible(!Vars::noPauseButton);
+                            }
+                        }
+                    }
+                }
                 if (MatchesFeatureQuery("Random Seed", q)) {
                     gui.toggle("Random Seed", &Vars::randomSeed);
                     if (Vars::randomSeed) gui.slider_int("Seed", &Vars::randomSeedValue, 0, 100000);
@@ -479,6 +493,24 @@ void DrawFrameWorkGUI()
         s_prevMenuOpen = Vars::menuOpen;
     }
 
+#ifdef _WIN32
+    static bool s_prevMenuState = false;
+    static bool s_wasInsertDown = true;
+    if (Vars::menuOpen) {
+        if (!s_prevMenuState) {
+            s_wasInsertDown = true;
+        }
+        bool isInsertDown = (GetAsyncKeyState(0x2D) & 0x8000) != 0;
+        if (isInsertDown && !s_wasInsertDown) {
+            Vars::menuOpen = false;
+            ImGui::ClearActiveID();
+            ImGui::SetWindowFocus(nullptr);
+        }
+        s_wasInsertDown = isInsertDown;
+    }
+    s_prevMenuState = Vars::menuOpen;
+#endif
+
     gui.m_fade = fi_lerp(gui.m_fade, Vars::menuOpen ? 1.f : 0.f, 0.40f);
 
     if (gui.m_fade < 0.004f) {
@@ -504,7 +536,7 @@ void DrawFrameWorkGUI()
     {
         if (ImGui::IsKeyPressed(ImGuiKey_Escape, false) || 
             ImGui::IsKeyPressed(ImGuiKey_Insert, false) || 
-            (ImGui::IsKeyPressed(ImGuiKey_Tab, false) && !ImGui::GetIO().WantTextInput)) {
+            ImGui::IsKeyPressed(ImGuiKey_Tab, false)) {
             Vars::menuOpen = false;
             ImGui::ClearActiveID();
             ImGui::SetWindowFocus(nullptr);
@@ -718,7 +750,13 @@ void DrawFrameWorkGUI()
                 }
                 gui.toggle("No Death Effect", &Vars::noDeathEffect);
                 gui.toggle("No Respawn Flash", &Vars::noRespawnFlash);
-                gui.toggle("No Pause Button", &Vars::noPauseButton);
+                if (gui.toggle("No Pause Button", &Vars::noPauseButton)) {
+                    if (auto pl = PlayLayer::get()) {
+                        if (auto ui = pl->m_uiLayer) {
+                            if (ui->m_pauseBtn) ui->m_pauseBtn->setVisible(!Vars::noPauseButton);
+                        }
+                    }
+                }
                 gui.toggle("Random Seed", &Vars::randomSeed);
                 if (Vars::randomSeed)
                     gui.slider_int("Seed", &Vars::randomSeedValue, 0, 100000);
@@ -1129,8 +1167,12 @@ void DrawFrameWorkGUI()
                     gui.slider_float("Respawn Time", &Vars::respawnTime, 0.05f, 5.0f, "%.2fs");
                 }
                 gui.toggle("Pause On Complete", &Vars::pauseDuringComplete);
-                gui.toggle("Hide Pause Menu", &Vars::hidePauseMenu);
-                const bool zoomModLoaded = geode::Loader::get()->isModLoaded("bobby_shmurner.zoom");
+                if (gui.toggle("Hide Pause Menu", &Vars::hidePauseMenu)) {
+                    if (auto pause = cocos2d::CCScene::get()->getChildByID("PauseLayer")) {
+                        pause->setVisible(!Vars::hidePauseMenu);
+                    }
+                }
+                static const bool zoomModLoaded = geode::Loader::get()->isModLoaded("bobby_shmurner.zoom");
                 gui.toggle("Mouse Zoom on Pause", &Vars::mouseZoomOnPause);
                 if (zoomModLoaded) {
                     TextDisabled("Zoooom! mod is already active");

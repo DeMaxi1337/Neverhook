@@ -24,9 +24,11 @@ class $modify(NHStartposSwitcher, PlayLayer) {
         PlayLayer::createObjectsFromSetupFinished();
 
         m_fields->spots.clear();
-        for (auto obj : CCArrayExt<GameObject*>(m_objects)) {
-            if (auto sp = typeinfo_cast<StartPosObject*>(obj))
-                m_fields->spots.push_back(sp);
+        if (m_objects) {
+            for (auto obj : CCArrayExt<GameObject*>(m_objects)) {
+                if (auto sp = typeinfo_cast<StartPosObject*>(obj))
+                    m_fields->spots.push_back(sp);
+            }
         }
         std::sort(m_fields->spots.begin(), m_fields->spots.end(),
             [](StartPosObject* a, StartPosObject* b) { return a->m_positionX < b->m_positionX; });

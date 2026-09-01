@@ -24,6 +24,7 @@ class $modify(NHLayoutModePL, PlayLayer) {
 
         if (s_objectFilter.contains(obj->m_objectID)) {
             obj->m_isHide = true;
+            PlayLayer::addObject(obj);
             return;
         }
 
